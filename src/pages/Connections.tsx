@@ -141,38 +141,64 @@ export default function Connections() {
   return (
     <div className="space-y-6">
       <PageHeader>
-        <div className="w-full flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <button onClick={() => navigate('/projects')} className="p-1.5 hover:bg-muted rounded-md transition-colors -ml-2">
-                <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-              </button>
-              <h2 className="text-xl font-bold tracking-tight">
-                {currentProject ? `${currentProject.name} — Connections` : 'Connections'}
-              </h2>
-            </div>
-            <p className="text-xs text-muted-foreground hidden lg:block mt-1 ml-10">
-              {currentProject ? `Manage database connections for ${currentProject.name}.` : 'Manage your secure PostgreSQL connection profiles.'}
-            </p>
-          </div>
+        <div className="w-full">
+          <h2 className="text-xl font-bold tracking-tight">
+            {currentProject ? `${currentProject.name} — Connections` : 'Connections'}
+          </h2>
+          <p className="text-xs text-muted-foreground hidden lg:block mt-1">
+            {currentProject ? `Manage database connections for ${currentProject.name}.` : 'Manage your secure PostgreSQL connection profiles.'}
+          </p>
         </div>
       </PageHeader>
 
-      <div className="flex justify-end gap-3">
+      <div className="flex items-center justify-between gap-3">
         <button
-          onClick={() => navigate(`/projects/${projectIdParam}/compare`)}
-          className="border border-primary/30 text-primary px-4 py-2 rounded-md font-medium flex items-center gap-2 hover:bg-primary/10 transition-colors"
+          onClick={() => navigate('/projects')}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
-          <GitCompare className="w-4 h-4" /> Compare Schemas
+          <ArrowLeft className="w-4 h-4" />
+          Back to Projects
         </button>
-        {user?.role !== 'VIEWER' && (
-          <button
-            onClick={openCreate}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Add Connection
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+        {/* Compare Schemas — always visible; disabled with tooltip until 2 connections exist */}
+        {(() => {
+          const connCount = filteredConnections?.length ?? 0;
+          const canCompare = connCount >= 2;
+          return (
+            <div
+              className="relative group"
+              title={!canCompare ? 'Create two database connections to compare' : undefined}
+            >
+              <button
+                onClick={() => canCompare && navigate(`/projects/${projectIdParam}/compare`)}
+                disabled={!canCompare}
+                className={`border border-primary/30 text-primary px-4 py-2 rounded-md font-medium flex items-center gap-2 transition-colors ${
+                  canCompare
+                    ? 'hover:bg-primary/10 cursor-pointer'
+                    : 'opacity-40 cursor-not-allowed'
+                }`}
+              >
+                <GitCompare className="w-4 h-4" /> Compare Schemas
+              </button>
+              {!canCompare && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs px-3 py-1.5 text-xs rounded-md bg-popover border shadow-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                  Create two database connections to compare
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+          {/* Add Connection — hidden once 2 connections exist */}
+          {user?.role !== 'VIEWER' && (filteredConnections?.length ?? 0) < 2 && (
+            <button
+              onClick={openCreate}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Add Connection
+            </button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -238,7 +264,7 @@ export default function Connections() {
           ))}
           {filteredConnections?.length === 0 && (
             <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
-              No connections found. Click "Add Connection" to get started.
+              No connections yet. Add two database connections to enable schema comparison.
             </div>
           )}
         </div>
@@ -260,11 +286,12 @@ export default function Connections() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} autoComplete="off" className="p-6 space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-medium">Project</label>
                 <input
                   disabled
+                  autoComplete="off"
                   value={currentProject?.name || 'Loading...'}
                   className="w-full px-3 py-2 border rounded-md text-sm bg-background opacity-50"
                 />
@@ -272,29 +299,29 @@ export default function Connections() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Name</label>
-                  <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="e.g. Prod DB" />
+                  <input required autoComplete="off" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="e.g. Prod DB" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Environment</label>
-                  <select value={formData.environment} onChange={e => setFormData({ ...formData, environment: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background">
+                  <select autoComplete="off" value={formData.environment} onChange={e => setFormData({ ...formData, environment: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background">
                     <option>DEV</option><option>QA</option><option>UAT</option><option>PROD</option>
                   </select>
                 </div>
                 <div className="col-span-2 space-y-1">
                   <label className="text-xs font-medium">Host</label>
-                  <input required value={formData.host} onChange={e => setFormData({ ...formData, host: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="db.example.com" />
+                  <input required autoComplete="off" value={formData.host} onChange={e => setFormData({ ...formData, host: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="db.example.com" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Port</label>
-                  <input type="number" required value={formData.port} onChange={e => setFormData({ ...formData, port: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
+                  <input type="number" required autoComplete="off" value={formData.port} onChange={e => setFormData({ ...formData, port: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Database Name</label>
-                  <input required value={formData.databaseName} onChange={e => setFormData({ ...formData, databaseName: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
+                  <input required autoComplete="off" value={formData.databaseName} onChange={e => setFormData({ ...formData, databaseName: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Username</label>
-                  <input required value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
+                  <input required autoComplete="off" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">
@@ -303,6 +330,7 @@ export default function Connections() {
                   </label>
                   <input
                     type="password"
+                    autoComplete="new-password"
                     required={!editingConn}
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}

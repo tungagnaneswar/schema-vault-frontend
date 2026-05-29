@@ -151,11 +151,14 @@ function MismatchDetails({ details }: { details: string[] }) {
 function PresenceIndicator({ status, side }: { status: string; side: 'source' | 'target' }) {
   const missing = (side === 'source' && status === 'MISSING_IN_SOURCE') ||
                   (side === 'target' && status === 'MISSING_IN_TARGET');
+  const hasMismatch = status === 'DEFINITION_MISMATCH' || status === 'TYPE_MISMATCH';
   return (
     <div className="text-xs">
       {missing
         ? <span className="text-rose-500 font-medium">✗ Not present</span>
-        : <span className="text-emerald-500 font-medium">✓ Present</span>}
+        : hasMismatch
+          ? <span className="text-amber-500 font-medium">✓ Present (differs)</span>
+          : <span className="text-emerald-500 font-medium">✓ Present</span>}
     </div>
   );
 }
@@ -164,6 +167,11 @@ function PresenceIndicator({ status, side }: { status: string; side: 'source' | 
 
 function SubSection({ title, icon: Icon, diffs }: { title: string; icon: any; diffs: ObjectDiff[] }) {
   const nonIdentical = diffs.filter(d => d.status !== 'IDENTICAL');
+  const [expanded, setExpanded] = useState<string[]>([]);
+
+  const toggle = (name: string) =>
+    setExpanded(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
+
   if (diffs.length === 0) return null;
 
   return (
@@ -182,13 +190,25 @@ function SubSection({ title, icon: Icon, diffs }: { title: string; icon: any; di
         {diffs.map((diff) => {
           const conf = getStatus(diff.status);
           const DIcon = conf.icon;
+          const hasDefinition = diff.sourceDefinition || diff.targetDefinition;
+          const isExpanded = expanded.includes(diff.name);
           return (
             <div key={diff.name}>
-              <div className={clsx(
-                'grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 text-sm items-center',
-                diff.status !== 'IDENTICAL' && 'bg-muted/10'
-              )}>
-                <div className="flex items-center gap-2 pl-6">
+              <div
+                onClick={() => hasDefinition && toggle(diff.name)}
+                className={clsx(
+                  'grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-2.5 text-sm items-center transition-colors',
+                  diff.status !== 'IDENTICAL' && 'bg-muted/10',
+                  hasDefinition && 'cursor-pointer hover:bg-muted/20'
+                )}
+              >
+                <div className="flex items-center gap-2 pl-4">
+                  {hasDefinition && (
+                    isExpanded
+                      ? <ChevronUp className="w-3 h-3 text-muted-foreground shrink-0" />
+                      : <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
+                  )}
+                  {!hasDefinition && <span className="w-3 shrink-0" />}
                   <DIcon className={clsx('w-3.5 h-3.5 shrink-0', conf.color)} />
                   <span className="font-medium font-mono text-xs truncate" title={diff.name}>{diff.name}</span>
                 </div>
@@ -199,6 +219,31 @@ function SubSection({ title, icon: Icon, diffs }: { title: string; icon: any; di
               {diff.mismatchDetails && diff.mismatchDetails.length > 0 && (
                 <MismatchDetails details={diff.mismatchDetails} />
               )}
+              <AnimatePresence>
+                {isExpanded && hasDefinition && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="border-t bg-muted/5 overflow-hidden"
+                  >
+                    <div className="grid grid-cols-2 divide-x divide-border/50">
+                      <div className="p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Source Definition</p>
+                        <pre className="text-xs font-mono text-foreground/80 whitespace-pre-wrap break-all max-h-48 overflow-auto bg-muted/30 rounded-lg p-3">
+                          {diff.sourceDefinition || '— not present'}
+                        </pre>
+                      </div>
+                      <div className="p-4">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Target Definition</p>
+                        <pre className="text-xs font-mono text-foreground/80 whitespace-pre-wrap break-all max-h-48 overflow-auto bg-muted/30 rounded-lg p-3">
+                          {diff.targetDefinition || '— not present'}
+                        </pre>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}
@@ -499,58 +544,95 @@ export default function Compare() {
       </PageHeader>
 
       {/* ─── Selector card ──────────────────────────────────────────────── */}
-      <div className="bg-card border rounded-xl p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row items-end gap-4">
-          <div className="flex-1 w-full space-y-2">
-            <label className="text-sm font-medium flex items-center gap-1.5"><Database className="w-3.5 h-3.5" /> Source Database</label>
-            <select
-              value={sourceId}
-              onChange={(e) => { setSourceId(e.target.value); if (e.target.value === targetId) setTargetId(''); }}
-              className="w-full px-3 py-2 bg-background border rounded-md"
-              disabled={isLoadingConn}
-            >
-              <option value="">Select source database...</option>
-              {sourceOptions.map(c => (
-                <option key={c.id} value={c.id}>{c.name} ({c.environment})</option>
-              ))}
-            </select>
+      {!isLoadingConn && (connections?.length ?? 0) < 2 ? (
+        /* ── Empty state: not enough connections ── */
+        <div className="bg-card border-2 border-dashed rounded-xl p-12 text-center space-y-4">
+          <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+            <Database className="w-7 h-7 text-primary" />
           </div>
-
-          <button
-            type="button"
-            onClick={handleSwap}
-            disabled={!sourceId || !targetId}
-            title="Swap source and target"
-            className="hidden md:flex pb-2 px-2 text-muted-foreground hover:text-primary disabled:opacity-30 transition-colors"
-          >
-            <ArrowRightLeft className="w-5 h-5" />
-          </button>
-
-          <div className="flex-1 w-full space-y-2">
-            <label className="text-sm font-medium flex items-center gap-1.5"><Database className="w-3.5 h-3.5" /> Target Database</label>
-            <select
-              value={targetId}
-              onChange={(e) => setTargetId(e.target.value)}
-              className="w-full px-3 py-2 bg-background border rounded-md"
-              disabled={isLoadingConn || !sourceId}
-            >
-              <option value="">Select target database...</option>
-              {targetOptions.map(c => (
-                <option key={c.id} value={c.id}>{c.name} ({c.environment})</option>
-              ))}
-            </select>
+          <div>
+            <h3 className="text-base font-semibold">
+              {(connections?.length ?? 0) === 0
+                ? 'No database connections yet'
+                : 'Only one database connection found'}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              You need at least <span className="font-semibold text-foreground">two database connections</span> to run a schema comparison.
+            </p>
           </div>
-
           <button
-            onClick={handleCompare}
-            disabled={!sourceId || !targetId || compareMutation.isPending}
-            className="w-full md:w-auto px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-70 transition-colors"
+            onClick={() => navigate(`/projects/${projectIdParam}/connections`)}
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-md font-medium hover:bg-primary/90 transition-colors"
           >
-            {compareMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitCompare className="w-4 h-4" />}
-            Compare
+            <Plus className="w-4 h-4" />
+            {(connections?.length ?? 0) === 0 ? 'Create Connections' : 'Add Second Connection'}
           </button>
         </div>
-      </div>
+      ) : (
+        <div className="bg-card border rounded-xl p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row items-end gap-4">
+            <div className="flex-1 w-full space-y-2">
+              <label className="text-sm font-medium flex items-center gap-1.5"><Database className="w-3.5 h-3.5" /> Source Database</label>
+              <select
+                value={sourceId}
+                onChange={(e) => { setSourceId(e.target.value); if (e.target.value === targetId) setTargetId(''); }}
+                className="w-full px-3 py-2 bg-background border rounded-md"
+                disabled={isLoadingConn}
+              >
+                <option value="">Select source database...</option>
+                {sourceOptions.map(c => (
+                  <option key={c.id} value={c.id}>{c.name} ({c.environment})</option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSwap}
+              disabled={!sourceId || !targetId}
+              title="Swap source and target"
+              className="hidden md:flex pb-2 px-2 text-muted-foreground hover:text-primary disabled:opacity-30 transition-colors"
+            >
+              <ArrowRightLeft className="w-5 h-5" />
+            </button>
+
+            <div className="flex-1 w-full space-y-2">
+              <label className="text-sm font-medium flex items-center gap-1.5"><Database className="w-3.5 h-3.5" /> Target Database</label>
+              <select
+                value={targetId}
+                onChange={(e) => setTargetId(e.target.value)}
+                className="w-full px-3 py-2 bg-background border rounded-md"
+                disabled={isLoadingConn || !sourceId}
+              >
+                <option value="">Select target database...</option>
+                {targetOptions.map(c => (
+                  <option key={c.id} value={c.id}>{c.name} ({c.environment})</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Compare button — disabled with tooltip until both are selected */}
+            <div
+              className="relative group w-full md:w-auto"
+              title={!sourceId || !targetId ? 'Select both source and target databases to compare' : undefined}
+            >
+              <button
+                onClick={handleCompare}
+                disabled={!sourceId || !targetId || compareMutation.isPending}
+                className="w-full md:w-auto px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
+              >
+                {compareMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitCompare className="w-4 h-4" />}
+                Compare
+              </button>
+              {(!sourceId || !targetId) && !compareMutation.isPending && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs px-3 py-1.5 text-xs rounded-md bg-popover border shadow-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                  Select both source and target databases to compare
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Results ────────────────────────────────────────────────────── */}
       {compareMutation.isSuccess && result && (

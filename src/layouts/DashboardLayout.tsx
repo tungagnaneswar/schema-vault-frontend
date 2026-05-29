@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { type RootState } from '../store/store';
-import { LayoutDashboard, LogOut, ShieldCheck, Sun, Moon, ChevronDown, Users, Folder } from 'lucide-react';
+import { LayoutDashboard, LogOut, ShieldCheck, Sun, Moon, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import clsx from 'clsx';
 
 export default function DashboardLayout() {
@@ -14,6 +14,9 @@ export default function DashboardLayout() {
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => localStorage.getItem('sidebarCollapsed') === 'true'
+  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,13 +66,30 @@ export default function DashboardLayout() {
   return (
     <div className="h-screen flex overflow-hidden bg-muted/30">
       {/* Sidebar */}
-      <aside className="w-64 bg-background border-r flex flex-col shadow-sm hidden md:flex shrink-0">
-        <div className="h-16 flex items-center px-6 border-b shrink-0">
-          <ShieldCheck className="w-6 h-6 text-primary mr-2" />
-          <h1 className="text-lg font-bold tracking-tight text-foreground">SchemaDiff</h1>
+      <aside
+        className={clsx(
+          'bg-background border-r flex flex-col shadow-sm hidden md:flex shrink-0 transition-all duration-300 ease-in-out',
+          isSidebarCollapsed ? 'w-16' : 'w-64'
+        )}
+      >
+        {/* Logo / Brand */}
+        <div className={clsx(
+          'h-16 flex items-center border-b shrink-0 overflow-hidden',
+          isSidebarCollapsed ? 'justify-center px-0' : 'px-5 gap-2'
+        )}>
+          <ShieldCheck className="w-6 h-6 text-primary shrink-0" />
+          <h1
+            className={clsx(
+              'text-lg font-bold tracking-tight text-foreground whitespace-nowrap transition-all duration-300 ease-in-out',
+              isSidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'
+            )}
+          >
+            SchemaDiff
+          </h1>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-auto">
+        {/* Nav Items */}
+        <nav className="flex-1 p-2 space-y-1 overflow-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
@@ -77,19 +97,57 @@ export default function DashboardLayout() {
               <Link
                 key={item.name}
                 to={item.path}
+                title={isSidebarCollapsed ? item.name : undefined}
                 className={clsx(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                  isActive 
-                    ? "bg-primary/10 text-primary" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors overflow-hidden',
+                  isSidebarCollapsed ? 'justify-center' : '',
+                  isActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
-                <Icon className="w-4 h-4" />
-                {item.name}
+                <Icon className="w-4 h-4 shrink-0" />
+                <span
+                  className={clsx(
+                    'whitespace-nowrap transition-all duration-300 ease-in-out',
+                    isSidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                  )}
+                >
+                  {item.name}
+                </span>
               </Link>
             );
           })}
         </nav>
+
+        {/* Collapse toggle at the bottom */}
+        <div className="border-t p-2">
+          <button
+            onClick={() => {
+              const next = !isSidebarCollapsed;
+              setIsSidebarCollapsed(next);
+              localStorage.setItem('sidebarCollapsed', String(next));
+            }}
+            title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className={clsx(
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
+              isSidebarCollapsed ? 'justify-center' : ''
+            )}
+          >
+            {isSidebarCollapsed
+              ? <PanelLeftOpen className="w-4 h-4 shrink-0" />
+              : <PanelLeftClose className="w-4 h-4 shrink-0" />
+            }
+            <span
+              className={clsx(
+                'whitespace-nowrap transition-all duration-300 ease-in-out',
+                isSidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+              )}
+            >
+              Collapse
+            </span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
