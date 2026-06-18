@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
@@ -271,7 +272,7 @@ export default function Connections() {
       )}
 
       {/* Create / Edit Modal */}
-      {isModalOpen && (
+      {isModalOpen && createPortal(
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex justify-center items-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -348,11 +349,12 @@ export default function Connections() {
               </div>
             </form>
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
-      {connToDelete && (
+      {connToDelete && createPortal(
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex justify-center items-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -387,7 +389,8 @@ export default function Connections() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

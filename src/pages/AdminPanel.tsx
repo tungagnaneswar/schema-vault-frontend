@@ -411,7 +411,7 @@ export default function AdminPanel() {
       </div>
 
       {/* Create Team Modal */}
-      {showCreateModal && (
+      {showCreateModal && createPortal(
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-card w-full max-w-md rounded-lg shadow-lg border p-6 m-4 animate-in fade-in zoom-in-95">
             <h2 className="text-xl font-bold mb-4">Create New Team</h2>
@@ -455,7 +455,8 @@ export default function AdminPanel() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

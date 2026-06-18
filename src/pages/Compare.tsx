@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api/axios';
+import { createSnapshot, startCompareJob, getCompareJob, type CompareJob as CompareJobType } from '../api/compareApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRightLeft, GitCompare, CheckCircle2, AlertTriangle, XCircle,
   ChevronDown, ChevronUp, Loader2, Download, Database,
   Key, Link2, ListTree, Zap, Code2, Workflow, Hash, Table2, AlertCircle,
-  Eye, Box, ShieldAlert, ShieldCheck, Copy, Plus, X, ArrowLeft
+  Eye, Box, ShieldAlert, ShieldCheck, Copy, Plus, X, ArrowLeft, History
 } from 'lucide-react';
 import clsx from 'clsx';
 import PageHeader from '../components/PageHeader';
@@ -418,13 +419,37 @@ export default function Compare() {
   // Filter connections to only show those belonging to the current project
   const connections = allConnections?.filter(c => c.projectId === parseInt(projectIdParam));
 
-  const compareMutation = useMutation<CompareResult>({
+  const [pollingJobId, setPollingJobId] = useState<number | null>(null);
+  const [jobStatusMsg, setJobStatusMsg] = useState<string>('');
+
+  const { data: jobData } = useQuery<CompareJobType>({
+    queryKey: ['compareJob', pollingJobId],
+    queryFn: () => getCompareJob(pollingJobId!),
+    enabled: !!pollingJobId,
+    refetchInterval: (query) => {
+        const state = query.state.data;
+        if (state && (state.status === 'COMPLETED' || state.status === 'FAILED')) {
+            return false;
+        }
+        return 2000;
+    },
+  });
+
+  const compareMutation = useMutation({
     mutationFn: async () => {
-      const res = await api.post('/compare', {
-        sourceConnectionId: parseInt(sourceId),
-        targetConnectionId: parseInt(targetId)
-      });
-      return res.data;
+      setJobStatusMsg('Creating snapshots...');
+      const sourceSnap = await createSnapshot(parseInt(sourceId));
+      const targetSnap = await createSnapshot(parseInt(targetId));
+      setJobStatusMsg('Starting job...');
+      const job = await startCompareJob(sourceSnap.id, targetSnap.id);
+      return job.id;
+    },
+    onSuccess: (jobId) => {
+      setJobStatusMsg('Comparing schemas...');
+      setPollingJobId(jobId);
+    },
+    onError: () => {
+      setJobStatusMsg('Error occurred');
     }
   });
 
@@ -432,6 +457,8 @@ export default function Compare() {
     if (!sourceId || !targetId) return;
     setExpandedTables([]);
     setActiveTab('tables');
+    setPollingJobId(null);
+    setJobStatusMsg('');
     compareMutation.mutate();
   };
 
@@ -453,7 +480,7 @@ export default function Compare() {
   const sourceConn = connections?.find(c => String(c.id) === sourceId);
   const targetConn = connections?.find(c => String(c.id) === targetId);
 
-  const result = compareMutation.data;
+  const result = (jobData?.status === 'COMPLETED' ? jobData.resultData : null) as CompareResult | null;
 
   // ─── Extract nested table diffs for top-level tabs ────────────────────────
   
@@ -534,6 +561,12 @@ export default function Compare() {
             <h2 className="text-xl font-bold tracking-tight">
               {currentProject ? `${currentProject.name} — Compare Schemas` : 'Compare Schemas'}
             </h2>
+            <button
+              onClick={() => navigate(`/projects/${projectIdParam}/compare-history`)}
+              className="ml-4 flex items-center gap-1.5 text-xs bg-muted hover:bg-muted/80 text-muted-foreground px-3 py-1.5 rounded-full transition-colors"
+            >
+              <History className="w-3.5 h-3.5" /> History
+            </button>
           </div>
           <p className="text-xs text-muted-foreground hidden lg:block mt-1 ml-10">
             {currentProject
@@ -611,20 +644,20 @@ export default function Compare() {
               </select>
             </div>
 
-            {/* Compare button — disabled with tooltip until both are selected */}
             <div
               className="relative group w-full md:w-auto"
               title={!sourceId || !targetId ? 'Select both source and target databases to compare' : undefined}
             >
               <button
                 onClick={handleCompare}
-                disabled={!sourceId || !targetId || compareMutation.isPending}
+                disabled={!sourceId || !targetId || compareMutation.isPending || (!!pollingJobId && jobData?.status !== 'COMPLETED' && jobData?.status !== 'FAILED')}
                 className="w-full md:w-auto px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
               >
-                {compareMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitCompare className="w-4 h-4" />}
-                Compare
+                {(compareMutation.isPending || (!!pollingJobId && jobData?.status !== 'COMPLETED' && jobData?.status !== 'FAILED')) 
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> {jobStatusMsg}</> 
+                  : <><GitCompare className="w-4 h-4" /> Compare</>}
               </button>
-              {(!sourceId || !targetId) && !compareMutation.isPending && (
+              {(!sourceId || !targetId) && !compareMutation.isPending && !pollingJobId && (
                 <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs px-3 py-1.5 text-xs rounded-md bg-popover border shadow-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity z-50">
                   Select both source and target databases to compare
                 </div>
@@ -635,7 +668,15 @@ export default function Compare() {
       )}
 
       {/* ─── Results ────────────────────────────────────────────────────── */}
-      {compareMutation.isSuccess && result && (
+      {jobData?.status === 'FAILED' && (
+        <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-6 flex flex-col items-center justify-center text-rose-500">
+          <AlertCircle className="w-10 h-10 mb-3" />
+          <h3 className="font-semibold text-lg">Compare Job Failed</h3>
+          <p className="text-sm opacity-80 mt-1">{jobData.errorMessage || 'An unknown error occurred.'}</p>
+        </div>
+      )}
+
+      {result && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
 
           {/* ─── Tab navigation ──────────────────────────────────────── */}

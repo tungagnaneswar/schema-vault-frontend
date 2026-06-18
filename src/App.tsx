@@ -13,6 +13,7 @@ import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import Connections from './pages/Connections';
 import Compare from './pages/Compare';
+import CompareHistory from './pages/CompareHistory';
 import SuperAdminPanel from './pages/SuperAdminPanel';
 import AdminPanel from './pages/AdminPanel';
 import React from 'react';
@@ -58,6 +59,7 @@ function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectId/connections" element={<Connections />} />
           <Route path="/projects/:projectId/compare" element={<Compare />} />
+          <Route path="/projects/:projectId/compare-history" element={<CompareHistory />} />
           <Route path="/connections" element={<Navigate to="/projects" replace />} />
           <Route path="/compare" element={<Navigate to="/projects" replace />} />
           <Route
