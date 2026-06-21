@@ -11,7 +11,7 @@ export default function VerifyOtp() {
   const navigate = useNavigate();
 
   // Restore email from sessionStorage (set by ForgotPassword page)
-  const [email, setEmail] = useState(() => sessionStorage.getItem('otp_email') ?? '');
+  const [email] = useState(() => sessionStorage.getItem('otp_email') ?? '');
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [error, setError] = useState('');
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
