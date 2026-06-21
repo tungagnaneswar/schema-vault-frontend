@@ -40,7 +40,6 @@ export default function DashboardLayout() {
       localStorage.setItem('theme', 'dark');
       setIsDark(true);
     }
-    setIsDropdownOpen(false);
   };
 
   const handleLogout = () => {
@@ -162,45 +161,47 @@ export default function DashboardLayout() {
             {/* Page header content injected via Portal */}
           </div>
 
-          <div className="relative" ref={dropdownRef}>
-            <button 
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-3 hover:bg-muted/50 p-1.5 pr-3 rounded-full transition-colors"
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                {user?.email?.charAt(0).toUpperCase() || 'U'}
-              </div>
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium leading-none mb-1">{user?.email}</p>
-                <p className="text-xs text-muted-foreground leading-none">{user?.role}</p>
-              </div>
-              <ChevronDown className={clsx("w-4 h-4 text-muted-foreground transition-transform", isDropdownOpen && "rotate-180")} />
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-background rounded-md shadow-md border py-1 z-20">
-                <div className="px-4 py-2 border-b sm:hidden">
-                  <p className="text-sm font-medium truncate">{user?.email}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user?.role}</p>
+            <div className="relative" ref={dropdownRef}>
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-3 hover:bg-muted/50 p-1.5 pr-3 rounded-full transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                  {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
-                
-                <button
-                  onClick={toggleTheme}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
-                >
-                  {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  {isDark ? 'Light Mode' : 'Dark Mode'}
-                </button>
-                
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
-              </div>
-            )}
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-medium leading-none mb-1">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground leading-none">{user?.role}</p>
+                </div>
+                <ChevronDown className={clsx("w-4 h-4 text-muted-foreground transition-transform", isDropdownOpen && "rotate-180")} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-background rounded-md shadow-md border py-1 z-20">
+                  <div className="px-4 py-2 border-b sm:hidden">
+                    <p className="text-sm font-medium truncate">{user?.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.role}</p>
+                  </div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 

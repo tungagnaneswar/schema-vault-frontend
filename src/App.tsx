@@ -9,6 +9,9 @@ import DashboardLayout from './layouts/DashboardLayout';
 // Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import VerifyOtp from './pages/VerifyOtp';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import Connections from './pages/Connections';
@@ -50,6 +53,9 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/verify-otp" element={<VerifyOtp />} />
+          <Route path="/auth/reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* Dashboard Routes */}

@@ -300,29 +300,29 @@ export default function Connections() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Name</label>
-                  <input required autoComplete="off" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="e.g. Prod DB" />
+                  <input required autoComplete="do-not-autofill" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="e.g. Prod DB" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Environment</label>
-                  <select autoComplete="off" value={formData.environment} onChange={e => setFormData({ ...formData, environment: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background">
+                  <select autoComplete="do-not-autofill" value={formData.environment} onChange={e => setFormData({ ...formData, environment: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background">
                     <option>DEV</option><option>QA</option><option>UAT</option><option>PROD</option>
                   </select>
                 </div>
                 <div className="col-span-2 space-y-1">
                   <label className="text-xs font-medium">Host</label>
-                  <input required autoComplete="off" value={formData.host} onChange={e => setFormData({ ...formData, host: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="db.example.com" />
+                  <input required autoComplete="do-not-autofill" value={formData.host} onChange={e => setFormData({ ...formData, host: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="db.example.com" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Port</label>
-                  <input type="number" required autoComplete="off" value={formData.port} onChange={e => setFormData({ ...formData, port: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
+                  <input type="number" required autoComplete="do-not-autofill" value={formData.port} onChange={e => setFormData({ ...formData, port: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Database Name</label>
-                  <input required autoComplete="off" value={formData.databaseName} onChange={e => setFormData({ ...formData, databaseName: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
+                  <input required autoComplete="do-not-autofill" value={formData.databaseName} onChange={e => setFormData({ ...formData, databaseName: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Username</label>
-                  <input required autoComplete="off" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
+                  <input required autoComplete="do-not-autofill" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">

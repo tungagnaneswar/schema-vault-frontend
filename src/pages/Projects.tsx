@@ -154,7 +154,7 @@ export default function Projects() {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-medium">Project Name</label>
-                <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="e.g. Marketing Dashboard" />
+                <input required autoComplete="do-not-autofill" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="e.g. Marketing Dashboard" />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium">Description (Optional)</label>
