@@ -1,73 +1,61 @@
-# React + TypeScript + Vite
+# Schema Vault Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the React + TypeScript frontend application for Schema Vault, powered by Vite.
 
-Currently, two official plugins are available:
+## 🚀 Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js (v18 or higher recommended)
+- npm or yarn
 
-## React Compiler
+## 💻 Local Development Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repository-url>
+   cd schema-vault-frontend
+   ```
 
-## Expanding the ESLint configuration
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. **Configure Environment Variables:**
+   Copy the `.env.example` file to create your local `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+   *Make sure `VITE_API_BASE_URL` in your `.env` points to your backend API (e.g., `http://localhost:8080/api`).*
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+   The application should now be running on `http://localhost:5173`.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🏗️ Building for Production
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+To create a production build manually:
+```bash
+npm run build
 ```
+The compiled static assets will be located in the `dist` folder.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🌐 Deployment (Vercel)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+This frontend is pre-configured to be deployed easily using **Vercel** (a `vercel.json` file is already included).
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### How to deploy:
+1. Push your code to your GitHub repository.
+2. Create an account on [Vercel](https://vercel.com/) and click **Add New Project**.
+3. Import your `schema-vault-frontend` GitHub repository.
+4. **Important**: Before clicking deploy, go to **Environment Variables** in the Vercel dashboard and add:
+   - **Name**: `VITE_API_BASE_URL`
+   - **Value**: The URL to your production backend (e.g., `https://api.yourdomain.com/api`)
+5. Click **Deploy**. Vercel will automatically build and host your frontend every time you push to the `main` branch!
+
+## 🛠️ Tech Stack
+- **React** (UI Library)
+- **TypeScript** (Static Typing)
+- **Vite** (Build Tool)
+- **Tailwind CSS** (Styling)
