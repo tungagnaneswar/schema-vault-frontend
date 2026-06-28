@@ -60,7 +60,8 @@ export default function AdminPanel() {
   const fetchDropdownData = async () => {
     try {
       const connsRes = await api.get('/connections');
-      setAvailableConnections(connsRes.data);
+      const data = connsRes.data.content ? connsRes.data.content : connsRes.data;
+      setAvailableConnections(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to fetch dropdown data", err);
     }
@@ -420,7 +421,7 @@ export default function AdminPanel() {
             <form onSubmit={handleCreateTeam}>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">Team Name</label>
+                  <label className="text-sm font-medium block mb-1.5">Team Name <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     required

@@ -15,7 +15,7 @@ export default function Projects() {
   const { user } = useSelector((state: RootState) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', createDefaultEnvironments: true });
 
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ['projects'],
@@ -39,13 +39,13 @@ export default function Projects() {
   });
 
   const openCreate = () => {
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', createDefaultEnvironments: true });
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', createDefaultEnvironments: true });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -153,12 +153,24 @@ export default function Projects() {
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-medium">Project Name</label>
+                <label className="text-xs font-medium">Project Name <span className="text-red-500">*</span></label>
                 <input required autoComplete="do-not-autofill" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="e.g. Marketing Dashboard" />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-medium">Description (Optional)</label>
                 <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background min-h-[80px]" placeholder="Brief description of the project" />
+              </div>
+              <div className="flex items-center gap-2 mt-4">
+                <input 
+                  type="checkbox" 
+                  id="createEnv" 
+                  checked={formData.createDefaultEnvironments} 
+                  onChange={e => setFormData({ ...formData, createDefaultEnvironments: e.target.checked })}
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <label htmlFor="createEnv" className="text-sm font-medium">
+                  Create default environments (Development, QA, Staging, Production)
+                </label>
               </div>
               <div className="mt-6 flex justify-end gap-3 pt-4 border-t">
                 <button type="button" onClick={closeModal} className="px-4 py-2 text-sm border rounded-md hover:bg-muted transition-colors">Cancel</button>

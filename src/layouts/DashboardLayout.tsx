@@ -3,7 +3,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { type RootState } from '../store/store';
-import { LayoutDashboard, LogOut, ShieldCheck, Sun, Moon, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LayoutDashboard, LogOut, ShieldCheck, Sun, Moon, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User } from 'lucide-react';
 import clsx from 'clsx';
 
 export default function DashboardLayout() {
@@ -192,6 +192,15 @@ export default function DashboardLayout() {
                     <p className="text-xs text-muted-foreground truncate">{user?.role}</p>
                   </div>
                   
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    Profile
+                  </Link>
+
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"

@@ -19,7 +19,16 @@ import Compare from './pages/Compare';
 import CompareHistory from './pages/CompareHistory';
 import SuperAdminPanel from './pages/SuperAdminPanel';
 import AdminPanel from './pages/AdminPanel';
+import Profile from './pages/Profile';
 import React from 'react';
+
+const GuestRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
@@ -50,7 +59,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Auth Routes */}
-        <Route element={<AuthLayout />}>
+        <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/forgot-password" element={<ForgotPassword />} />
@@ -62,6 +71,7 @@ function App() {
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectId/connections" element={<Connections />} />
           <Route path="/projects/:projectId/compare" element={<Compare />} />

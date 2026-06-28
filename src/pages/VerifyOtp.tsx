@@ -142,7 +142,7 @@ export default function VerifyOtp() {
         {/* OTP digit boxes */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-muted-foreground">
-            One-Time Password
+            One-Time Password <span className="text-red-500">*</span>
           </label>
           <div
             className="flex gap-2 justify-between"
@@ -165,7 +165,7 @@ export default function VerifyOtp() {
                 className={[
                   'w-12 h-14 text-center text-xl font-bold rounded-lg border-2 bg-background',
                   'focus:outline-none focus:border-primary transition-all duration-200',
-                  'caret-transparent select-none',
+                  'caret-primary select-none',
                   digit
                     ? 'border-primary text-foreground shadow-sm shadow-primary/20'
                     : 'border-input text-muted-foreground',

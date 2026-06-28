@@ -13,10 +13,11 @@ export interface Project {
 
 export const getProjects = async (): Promise<Project[]> => {
   const response = await api.get('/projects');
-  return response.data;
+  // Handle both unpaginated and paginated responses for backward compatibility during transition
+  return response.data.content ? response.data.content : response.data;
 };
 
-export const createProject = async (data: { name: string; description?: string }): Promise<Project> => {
+export const createProject = async (data: { name: string; description?: string; createDefaultEnvironments?: boolean }): Promise<Project> => {
   const response = await api.post('/projects', data);
   return response.data;
 };

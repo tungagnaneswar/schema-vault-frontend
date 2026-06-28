@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Plus, Database, Trash2, ShieldCheck, Loader2, Pencil, X, Folder, ArrowLeft, GitCompare } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { getProjects, type Project } from '../api/projectsApi';
+import { getEnvironmentsByProject, type Environment } from '../api/environmentsApi';
 interface DbConnection {
   id: number;
   name: string;
@@ -16,12 +17,14 @@ interface DbConnection {
   port: number;
   databaseName: string;
   username: string;
-  environment: string;
+  environmentId: number;
+  environmentName: string;
+  engine: string;
   permissionLevel: string;
 }
 
 const emptyForm = {
-  name: '', projectId: 0, host: '', port: 5432, databaseName: '', username: '', password: '', environment: 'DEV'
+  name: '', environmentId: 0, host: '', port: '' as unknown as number, databaseName: '', username: '', password: '', engine: ''
 };
 
 const ENV_COLORS: Record<string, string> = {
@@ -29,6 +32,21 @@ const ENV_COLORS: Record<string, string> = {
   UAT:  'bg-amber-500/10 text-amber-500',
   QA:   'bg-blue-500/10 text-blue-500',
   DEV:  'bg-emerald-500/10 text-emerald-500',
+};
+
+const ENGINE_COLORS: Record<string, string> = {
+  POSTGRES: 'bg-sky-500/10 text-sky-600',
+  MYSQL:    'bg-orange-500/10 text-orange-600',
+};
+
+const ENGINE_LABELS: Record<string, string> = {
+  POSTGRES: 'PostgreSQL',
+  MYSQL:    'MySQL',
+};
+
+const ENGINE_PORTS: Record<string, number> = {
+  POSTGRES: 5432,
+  MYSQL: 3306,
 };
 
 import { useSelector } from 'react-redux';
@@ -53,13 +71,19 @@ export default function Connections() {
     queryKey: ['connections'],
     queryFn: async () => {
       const res = await api.get('/connections');
-      return res.data;
+      return res.data.content ? res.data.content : res.data;
     }
   });
 
   const { data: projects } = useQuery<Project[]>({
     queryKey: ['projects'],
     queryFn: getProjects
+  });
+
+  const { data: environments } = useQuery<Environment[]>({
+    queryKey: ['environments', projectIdParam],
+    queryFn: () => getEnvironmentsByProject(parseInt(projectIdParam!)),
+    enabled: !!projectIdParam
   });
 
   const filteredConnections = connections?.filter(c => c.projectId === parseInt(projectIdParam));
@@ -102,7 +126,7 @@ export default function Connections() {
     setEditingConn(null);
     setFormData({
       ...emptyForm,
-      projectId: projectIdParam ? parseInt(projectIdParam) : 0
+      environmentId: environments && environments.length > 0 ? environments[0].id : 0
     });
     setIsModalOpen(true);
   };
@@ -111,13 +135,13 @@ export default function Connections() {
     setEditingConn(conn);
     setFormData({
       name: conn.name,
-      projectId: conn.projectId,
       host: conn.host,
       port: conn.port,
       databaseName: conn.databaseName,
       username: conn.username,
       password: '', // never pre-fill password
-      environment: conn.environment,
+      environmentId: conn.environmentId,
+      engine: conn.engine || 'POSTGRES',
     });
     setIsModalOpen(true);
   };
@@ -147,7 +171,7 @@ export default function Connections() {
             {currentProject ? `${currentProject.name} — Connections` : 'Connections'}
           </h2>
           <p className="text-xs text-muted-foreground hidden lg:block mt-1">
-            {currentProject ? `Manage database connections for ${currentProject.name}.` : 'Manage your secure PostgreSQL connection profiles.'}
+            {currentProject ? `Manage database connections for ${currentProject.name}.` : 'Manage your secure database connection profiles.'}
           </p>
         </div>
       </PageHeader>
@@ -222,8 +246,11 @@ export default function Connections() {
                   <div>
                     <h3 className="font-semibold">{conn.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md inline-flex items-center ${ENV_COLORS[conn.environment] ?? 'bg-muted text-muted-foreground'}`}>
-                        {conn.environment}
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md inline-flex items-center ${ENV_COLORS[conn.environmentName?.toUpperCase()] ?? 'bg-muted text-muted-foreground'}`}>
+                        {conn.environmentName}
+                      </span>
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-md inline-flex items-center ${ENGINE_COLORS[conn.engine] ?? 'bg-muted text-muted-foreground'}`}>
+                        {ENGINE_LABELS[conn.engine] ?? conn.engine}
                       </span>
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1 bg-muted px-2 py-0.5 rounded-md">
                         <Folder className="w-3 h-3" /> {conn.projectName}
@@ -297,36 +324,63 @@ export default function Connections() {
                   className="w-full px-3 py-2 border rounded-md text-sm bg-background opacity-50"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Name</label>
+                  <label className="text-xs font-medium">Name <span className="text-red-500">*</span></label>
                   <input required autoComplete="do-not-autofill" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="e.g. Prod DB" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Environment</label>
-                  <select autoComplete="do-not-autofill" value={formData.environment} onChange={e => setFormData({ ...formData, environment: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background">
-                    <option>DEV</option><option>QA</option><option>UAT</option><option>PROD</option>
+                  <label className="text-xs font-medium">Database Engine <span className="text-red-500">*</span></label>
+                  <select
+                    value={formData.engine}
+                    onChange={e => {
+                      const engine = e.target.value;
+                      setFormData({ ...formData, engine, port: ENGINE_PORTS[engine] ?? formData.port });
+                    }}
+                    required
+                    disabled={!!editingConn}
+                    className="w-full px-3 py-2 border rounded-md text-sm bg-background disabled:opacity-50"
+                  >
+                    <option value="" disabled>Select an engine...</option>
+                    <option value="POSTGRES">PostgreSQL</option>
+                    <option value="MYSQL">MySQL</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Environment <span className="text-red-500">*</span></label>
+                  <select 
+                    autoComplete="do-not-autofill" 
+                    value={formData.environmentId} 
+                    onChange={e => setFormData({ ...formData, environmentId: parseInt(e.target.value) })} 
+                    className="w-full px-3 py-2 border rounded-md text-sm bg-background"
+                    required
+                  >
+                    <option value={0} disabled>Select an environment...</option>
+                    {environments?.map(env => (
+                      <option key={env.id} value={env.id}>{env.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="col-span-2 space-y-1">
-                  <label className="text-xs font-medium">Host</label>
+                  <label className="text-xs font-medium">Host <span className="text-red-500">*</span></label>
                   <input required autoComplete="do-not-autofill" value={formData.host} onChange={e => setFormData({ ...formData, host: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" placeholder="db.example.com" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Port</label>
-                  <input type="number" required autoComplete="do-not-autofill" value={formData.port} onChange={e => setFormData({ ...formData, port: parseInt(e.target.value) })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
+                  <label className="text-xs font-medium">Port <span className="text-red-500">*</span></label>
+                  <input type="number" required autoComplete="do-not-autofill" value={formData.port} onChange={e => { const val = parseInt(e.target.value); setFormData({ ...formData, port: isNaN(val) ? ('' as unknown as number) : val }) }} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Database Name</label>
+                  <label className="text-xs font-medium">Database Name <span className="text-red-500">*</span></label>
                   <input required autoComplete="do-not-autofill" value={formData.databaseName} onChange={e => setFormData({ ...formData, databaseName: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium">Username</label>
+                  <label className="text-xs font-medium">Username <span className="text-red-500">*</span></label>
                   <input required autoComplete="do-not-autofill" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} className="w-full px-3 py-2 border rounded-md text-sm bg-background" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">
                     Password
+                    {!editingConn && <span className="text-red-500 ml-1">*</span>}
                     {editingConn && <span className="text-muted-foreground font-normal ml-1">(leave blank to keep existing)</span>}
                   </label>
                   <input

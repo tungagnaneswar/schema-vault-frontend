@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api/axios';
@@ -13,13 +13,15 @@ import {
 import clsx from 'clsx';
 import PageHeader from '../components/PageHeader';
 import { getProjects, type Project } from '../api/projectsApi';
+import { getEnvironmentsByProject, type Environment } from '../api/environmentsApi';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Connection {
   id: number;
   name: string;
-  environment: string;
+  environmentId: number;
+  environmentName: string;
   projectId: number;
 }
 
@@ -405,7 +407,7 @@ export default function Compare() {
     queryKey: ['connections'],
     queryFn: async () => {
       const res = await api.get('/connections');
-      return res.data;
+      return res.data.content ? res.data.content : res.data;
     }
   });
 
@@ -415,6 +417,12 @@ export default function Compare() {
   });
 
   const currentProject = projects?.find(p => p.id === parseInt(projectIdParam));
+
+  const { data: environments } = useQuery<Environment[]>({
+    queryKey: ['environments', projectIdParam],
+    queryFn: () => getEnvironmentsByProject(parseInt(projectIdParam!)),
+    enabled: !!projectIdParam
+  });
 
   // Filter connections to only show those belonging to the current project
   const connections = allConnections?.filter(c => c.projectId === parseInt(projectIdParam));
@@ -469,13 +477,33 @@ export default function Compare() {
   };
 
   const handleSwap = () => {
-    setSourceId(targetId);
-    setTargetId(sourceId);
+    const tId = targetId;
+    const sId = sourceId;
+
+    setSourceId(tId);
+    setTargetId(sId);
   };
 
-  // Filtered options
-  const sourceOptions = connections ?? [];
-  const targetOptions = connections?.filter(c => String(c.id) !== sourceId) ?? [];
+  // Auto-select connections to ensure a valid default state
+  useEffect(() => {
+    if (connections && connections.length > 1) {
+      if (!sourceId && !targetId) {
+        setSourceId(String(connections[0].id));
+        setTargetId(String(connections[1].id));
+      } else if (sourceId && (!targetId || targetId === sourceId)) {
+        const nextTarget = connections.find(c => String(c.id) !== sourceId);
+        if (nextTarget) {
+          setTargetId(String(nextTarget.id));
+        }
+      } else if (targetId && (!sourceId || sourceId === targetId)) {
+        const nextSource = connections.find(c => String(c.id) !== targetId);
+        if (nextSource) {
+          setSourceId(String(nextSource.id));
+        }
+      }
+    }
+  }, [sourceId, targetId, connections]);
+
 
   const sourceConn = connections?.find(c => String(c.id) === sourceId);
   const targetConn = connections?.find(c => String(c.id) === targetId);
@@ -604,17 +632,19 @@ export default function Compare() {
       ) : (
         <div className="bg-card border rounded-xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row items-end gap-4">
-            <div className="flex-1 w-full space-y-2">
-              <label className="text-sm font-medium flex items-center gap-1.5"><Database className="w-3.5 h-3.5" /> Source Database</label>
+            <div className="flex-1 w-full">
+              <label className="text-sm font-medium flex items-center gap-1.5 mb-2"><Database className="w-3.5 h-3.5" /> Source Database</label>
               <select
                 value={sourceId}
-                onChange={(e) => { setSourceId(e.target.value); if (e.target.value === targetId) setTargetId(''); }}
-                className="w-full px-3 py-2 bg-background border rounded-md"
+                onChange={(e) => setSourceId(e.target.value)}
+                className="w-full px-3 py-2 bg-background border rounded-md h-[42px]"
                 disabled={isLoadingConn}
               >
                 <option value="">Select source database...</option>
-                {sourceOptions.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} ({c.environment})</option>
+                {connections?.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.environmentName})
+                  </option>
                 ))}
               </select>
             </div>
@@ -624,22 +654,24 @@ export default function Compare() {
               onClick={handleSwap}
               disabled={!sourceId || !targetId}
               title="Swap source and target"
-              className="hidden md:flex pb-2 px-2 text-muted-foreground hover:text-primary disabled:opacity-30 transition-colors"
+              className="hidden md:flex pb-[11px] px-2 text-muted-foreground hover:text-primary disabled:opacity-30 transition-colors"
             >
               <ArrowRightLeft className="w-5 h-5" />
             </button>
 
-            <div className="flex-1 w-full space-y-2">
-              <label className="text-sm font-medium flex items-center gap-1.5"><Database className="w-3.5 h-3.5" /> Target Database</label>
+            <div className="flex-1 w-full">
+              <label className="text-sm font-medium flex items-center gap-1.5 mb-2"><Database className="w-3.5 h-3.5" /> Target Database</label>
               <select
                 value={targetId}
                 onChange={(e) => setTargetId(e.target.value)}
-                className="w-full px-3 py-2 bg-background border rounded-md"
-                disabled={isLoadingConn || !sourceId}
+                className="w-full px-3 py-2 bg-background border rounded-md h-[42px]"
+                disabled={isLoadingConn}
               >
                 <option value="">Select target database...</option>
-                {targetOptions.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} ({c.environment})</option>
+                {connections?.map(c => (
+                  <option key={c.id} value={c.id} disabled={String(c.id) === sourceId}>
+                    {c.name} ({c.environmentName}) {String(c.id) === sourceId ? '(Source)' : ''}
+                  </option>
                 ))}
               </select>
             </div>
