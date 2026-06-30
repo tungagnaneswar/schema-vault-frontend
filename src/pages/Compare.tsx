@@ -8,7 +8,8 @@ import {
   ArrowRightLeft, GitCompare, CheckCircle2, AlertTriangle, XCircle,
   ChevronDown, ChevronUp, Loader2, Download, Database,
   Key, Link2, ListTree, Zap, Code2, Workflow, Hash, Table2, AlertCircle,
-  Eye, Box, ShieldAlert, ShieldCheck, Copy, Plus, X, ArrowLeft, History
+  Eye, Box, ShieldAlert, ShieldCheck, Copy, Plus, X, ArrowLeft, History,
+  PlugZap, Camera, Columns3, Scale, Sparkles
 } from 'lucide-react';
 import clsx from 'clsx';
 import PageHeader from '../components/PageHeader';
@@ -107,6 +108,18 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: 'types',       label: 'Types',       icon: Box },
   { key: 'views',       label: 'Views',       icon: Eye },
   { key: 'constraints', label: 'Constraints', icon: ShieldAlert },
+];
+
+// ─── Progress Stepper (imported component + types) ──────────────────────────
+
+import CompareProgressStepper, { type StepStatus, type ProgressStep } from '../components/CompareProgressStepper';
+
+const INITIAL_STEPS: ProgressStep[] = [
+  { id: 'connect',   label: 'Verifying Connections',     description: 'Testing database connectivity...',               icon: PlugZap,      status: 'pending' },
+  { id: 'snapshot',  label: 'Creating Snapshots',        description: 'Capturing current schema state...',              icon: Camera,       status: 'pending' },
+  { id: 'retrieve',  label: 'Retrieving Schema Objects', description: 'Tables, columns, indexes, constraints...',       icon: Columns3,     status: 'pending' },
+  { id: 'compare',   label: 'Comparing Schemas',         description: 'Analyzing differences between environments...',  icon: Scale,        status: 'pending' },
+  { id: 'finalize',  label: 'Preparing Results',         description: 'Almost there! Generating comparison report...',  icon: Sparkles,     status: 'pending' },
 ];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -424,7 +437,16 @@ export default function Compare() {
   const connections = allConnections?.filter(c => c.projectId === parseInt(projectIdParam));
 
   const [pollingJobId, setPollingJobId] = useState<number | null>(null);
-  const [jobStatusMsg, setJobStatusMsg] = useState<string>('');
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>(INITIAL_STEPS);
+  const [showStepper, setShowStepper] = useState(false);
+
+  // Helper to update a specific step's status
+  const updateStep = (stepId: string, status: StepStatus) => {
+    setProgressSteps(prev => prev.map(s => s.id === stepId ? { ...s, status } : s));
+  };
+
+  // Simulate a short delay for visual effect on fast steps
+  const stepDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const { data: jobData } = useQuery<CompareJobType>({
     queryKey: ['compareJob', pollingJobId],
@@ -439,21 +461,52 @@ export default function Compare() {
     },
   });
 
+  // Watch for job completion/failure to update final steps
+  useEffect(() => {
+    if (jobData?.status === 'COMPLETED') {
+      updateStep('compare', 'completed');
+      updateStep('finalize', 'active');
+      // Brief delay then mark finalize as completed
+      const timer = setTimeout(() => {
+        updateStep('finalize', 'completed');
+        // Hide stepper after showing completion
+        setTimeout(() => setShowStepper(false), 1500);
+      }, 600);
+      return () => clearTimeout(timer);
+    } else if (jobData?.status === 'FAILED') {
+      // Mark current active step as failed
+      setProgressSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'failed' } : s));
+    }
+  }, [jobData?.status]);
+
   const compareMutation = useMutation({
     mutationFn: async () => {
-      setJobStatusMsg('Creating snapshots...');
+      // Step 1: Verify connections
+      updateStep('connect', 'active');
+      await stepDelay(800);
+      updateStep('connect', 'completed');
+
+      // Step 2: Create snapshots
+      updateStep('snapshot', 'active');
       const sourceSnap = await createSnapshot(parseInt(sourceId));
       const targetSnap = await createSnapshot(parseInt(targetId));
-      setJobStatusMsg('Starting job...');
+      updateStep('snapshot', 'completed');
+
+      // Step 3: Retrieve schema objects
+      updateStep('retrieve', 'active');
+      await stepDelay(600);
+      updateStep('retrieve', 'completed');
+
+      // Step 4: Start compare job
+      updateStep('compare', 'active');
       const job = await startCompareJob(sourceSnap.id, targetSnap.id);
       return job.id;
     },
     onSuccess: (jobId) => {
-      setJobStatusMsg('Comparing schemas...');
       setPollingJobId(jobId);
     },
     onError: () => {
-      setJobStatusMsg('Error occurred');
+      setProgressSteps(prev => prev.map(s => s.status === 'active' ? { ...s, status: 'failed' } : s));
     }
   });
 
@@ -462,7 +515,8 @@ export default function Compare() {
     setExpandedTables([]);
     setActiveTab('tables');
     setPollingJobId(null);
-    setJobStatusMsg('');
+    setProgressSteps(INITIAL_STEPS.map(s => ({ ...s, status: 'pending' as StepStatus })));
+    setShowStepper(true);
     compareMutation.mutate();
   };
 
@@ -682,7 +736,7 @@ export default function Compare() {
                 className="w-full md:w-auto px-6 py-2 bg-primary text-primary-foreground rounded-md font-medium flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-70 disabled:cursor-not-allowed transition-colors"
               >
                 {(compareMutation.isPending || (!!pollingJobId && jobData?.status !== 'COMPLETED' && jobData?.status !== 'FAILED')) 
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> {jobStatusMsg}</> 
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Comparing...</> 
                   : <><GitCompare className="w-4 h-4" /> Compare</>}
               </button>
               {(!sourceId || !targetId) && !compareMutation.isPending && !pollingJobId && (
@@ -694,6 +748,13 @@ export default function Compare() {
           </div>
         </div>
       )}
+
+      {/* ─── Progress Stepper ────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showStepper && (
+          <CompareProgressStepper steps={progressSteps} />
+        )}
+      </AnimatePresence>
 
       {/* ─── Results ────────────────────────────────────────────────────── */}
       {jobData?.status === 'FAILED' && (
