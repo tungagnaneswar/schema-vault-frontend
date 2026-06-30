@@ -14,7 +14,11 @@ export interface Project {
 export const getProjects = async (): Promise<Project[]> => {
   const response = await api.get('/projects');
   // Handle both unpaginated and paginated responses for backward compatibility during transition
-  return response.data.content ? response.data.content : response.data;
+  if (Array.isArray(response.data)) return response.data;
+  if (response.data?.content && Array.isArray(response.data.content)) return response.data.content;
+  if (response.data?.data && Array.isArray(response.data.data)) return response.data.data;
+  if (response.data?.data?.content && Array.isArray(response.data.data.content)) return response.data.data.content;
+  return [];
 };
 
 export const createProject = async (data: { name: string; description?: string; createDefaultEnvironments?: boolean }): Promise<Project> => {
