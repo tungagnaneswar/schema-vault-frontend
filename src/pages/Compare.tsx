@@ -13,7 +13,7 @@ import {
 import clsx from 'clsx';
 import PageHeader from '../components/PageHeader';
 import { getProjects, type Project } from '../api/projectsApi';
-import { getEnvironmentsByProject, type Environment } from '../api/environmentsApi';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -418,11 +418,7 @@ export default function Compare() {
 
   const currentProject = projects?.find(p => p.id === parseInt(projectIdParam));
 
-  const { data: environments } = useQuery<Environment[]>({
-    queryKey: ['environments', projectIdParam],
-    queryFn: () => getEnvironmentsByProject(parseInt(projectIdParam!)),
-    enabled: !!projectIdParam
-  });
+
 
   // Filter connections to only show those belonging to the current project
   const connections = allConnections?.filter(c => c.projectId === parseInt(projectIdParam));
