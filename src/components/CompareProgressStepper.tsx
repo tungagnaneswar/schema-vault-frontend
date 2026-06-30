@@ -131,7 +131,6 @@ export default function CompareProgressStepper({ steps }: { steps: ProgressStep[
         {/* ── Steps ────────────────────────────────────────────────── */}
         <div className="border-t">
           {steps.map((step, idx) => {
-            const StepIcon = step.icon;
             const isActive = step.status === 'active';
             const isCompleted = step.status === 'completed';
             const isFailed = step.status === 'failed';
