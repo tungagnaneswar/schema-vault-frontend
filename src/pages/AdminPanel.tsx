@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Trash2, Database, Shield, Settings, Edit, MoreVertical } from 'lucide-react';
+import { Users, Plus, Trash2, Database, Shield, Settings, Edit } from 'lucide-react';
 import { teamsApi, type Team, type TeamMember, type TeamDbConnection, type MemberProject } from '../api/teamsApi';
 import api from '../api/axios';
 import { createPortal } from 'react-dom';
