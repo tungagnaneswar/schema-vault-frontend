@@ -75,6 +75,7 @@ function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectId/connections" element={<Connections />} />
           <Route path="/projects/:projectId/compare" element={<Compare />} />
+          <Route path="/projects/:projectId/compare/:jobId" element={<Compare />} />
           <Route path="/projects/:projectId/compare-history" element={<CompareHistory />} />
           <Route path="/connections" element={<Navigate to="/projects" replace />} />
           <Route path="/compare" element={<Navigate to="/projects" replace />} />

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate, Navigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api/axios';
 import { createSnapshot, startCompareJob, getCompareJob, type CompareJob as CompareJobType } from '../api/compareApi';
@@ -403,10 +403,13 @@ function ObjectDiffList({ diffs, showDiffOnly, sourceLabel, targetLabel }: {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function Compare() {
-  const { projectId: projectIdParam } = useParams();
+  const { projectId: projectIdParam, jobId: jobIdParam } = useParams();
   const navigate = useNavigate();
-  const [sourceId, setSourceId] = useState('');
-  const [targetId, setTargetId] = useState('');
+  const location = useLocation();
+  const [sourceId, setSourceId] = useState(location.state?.sourceId || '');
+  const [targetId, setTargetId] = useState(location.state?.targetId || '');
+  const [reason, setReason] = useState('');
+  const [tagsInput, setTagsInput] = useState('');
   const [expandedTables, setExpandedTables] = useState<string[]>([]);
   const [showDiffOnly, setShowDiffOnly] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('tables');
@@ -436,9 +439,9 @@ export default function Compare() {
   // Filter connections to only show those belonging to the current project
   const connections = allConnections?.filter(c => c.projectId === parseInt(projectIdParam));
 
-  const [pollingJobId, setPollingJobId] = useState<number | null>(null);
+  const [pollingJobId, setPollingJobId] = useState<number | null>(jobIdParam ? Number(jobIdParam) : null);
   const [progressSteps, setProgressSteps] = useState<ProgressStep[]>(INITIAL_STEPS);
-  const [showStepper, setShowStepper] = useState(false);
+  const [showStepper, setShowStepper] = useState(jobIdParam ? false : false);
 
   // Helper to update a specific step's status
   const updateStep = (stepId: string, status: StepStatus) => {
@@ -470,7 +473,13 @@ export default function Compare() {
       const timer = setTimeout(() => {
         updateStep('finalize', 'completed');
         // Hide stepper after showing completion
-        setTimeout(() => setShowStepper(false), 1500);
+        setTimeout(() => {
+          setShowStepper(false);
+          // Redirect to the detail view once complete
+          if (!jobIdParam && pollingJobId) {
+             navigate(`/projects/${projectIdParam}/compare/${pollingJobId}`);
+          }
+        }, 1500);
       }, 600);
       return () => clearTimeout(timer);
     } else if (jobData?.status === 'FAILED') {
@@ -499,7 +508,8 @@ export default function Compare() {
 
       // Step 4: Start compare job
       updateStep('compare', 'active');
-      const job = await startCompareJob(sourceSnap.id, targetSnap.id);
+      const tagsList = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : undefined;
+      const job = await startCompareJob(sourceSnap.id, targetSnap.id, parseInt(projectIdParam!), reason || undefined, tagsList);
       return job.id;
     },
     onSuccess: (jobId) => {
@@ -628,16 +638,39 @@ export default function Compare() {
     };
   }, [result, extractedDiffs]);
 
+  const formatDuration = (ms: number | null) => {
+    if (!ms) return '-';
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  };
+
+  const getDisplayName = (email?: string) => {
+    if (!email) return '-';
+    const namePart = email.split('@')[0];
+    return namePart.split('.').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+  };
+
+  const sourceConnByEnv = connections?.find(c => c.environmentName === result?.sourceEnvironment);
+  const targetConnByEnv = connections?.find(c => c.environmentName === result?.targetEnvironment);
+
+  const sourceNameDisplay = sourceConnByEnv 
+      ? `${sourceConnByEnv.name} (${sourceConnByEnv.environmentName})` 
+      : (result?.sourceEnvironment || `Snap #${jobData?.sourceSnapshotId}`);
+
+  const targetNameDisplay = targetConnByEnv 
+      ? `${targetConnByEnv.name} (${targetConnByEnv.environmentName})` 
+      : (result?.targetEnvironment || `Snap #${jobData?.targetSnapshotId}`);
+
   return (
     <div className="space-y-6">
       <PageHeader>
         <div className="w-full">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(`/projects/${projectIdParam}/connections`)} className="p-1.5 hover:bg-muted rounded-md transition-colors -ml-2">
+            <button onClick={() => navigate(jobIdParam ? `/projects/${projectIdParam}/compare-history` : `/projects/${projectIdParam}/connections`)} className="p-1.5 hover:bg-muted rounded-md transition-colors -ml-2">
               <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </button>
             <h2 className="text-xl font-bold tracking-tight">
-              {currentProject ? `${currentProject.name} — Compare Schemas` : 'Compare Schemas'}
+              {jobIdParam ? `Comparison Details #${jobIdParam}` : currentProject ? `${currentProject.name} > Compare Schemas` : 'Compare Schemas'}
             </h2>
             <button
               onClick={() => navigate(`/projects/${projectIdParam}/compare-history`)}
@@ -647,15 +680,80 @@ export default function Compare() {
             </button>
           </div>
           <p className="text-xs text-muted-foreground hidden lg:block mt-1 ml-10">
-            {currentProject
-              ? `Select two connections from ${currentProject.name} to run a detailed structural comparison.`
-              : 'Select two environments to run a detailed structural comparison.'}
+            {jobIdParam 
+              ? 'Viewing detailed comparison results.' 
+              : currentProject
+                ? `Select two connections from ${currentProject.name} to run a detailed structural comparison.`
+                : 'Select two environments to run a detailed structural comparison.'}
           </p>
         </div>
       </PageHeader>
 
-      {/* ─── Selector card ──────────────────────────────────────────────── */}
-      {!isLoadingConn && (connections?.length ?? 0) < 2 ? (
+      {/* ─── Selector card / Metadata block ────────────────────────────── */}
+      {jobIdParam ? (
+        <div className="bg-card border rounded-xl p-6 shadow-sm mb-8 space-y-4">
+          <div className="flex items-center justify-between pb-4 border-b border-border/50">
+             <h3 className="text-lg font-semibold flex items-center gap-2">
+                <GitCompare className="w-5 h-5 text-primary" />
+                Comparison Information
+             </h3>
+             <button
+               onClick={() => navigate(`/projects/${projectIdParam}/compare`, { state: { sourceId: String(connections?.find(c => c.environmentName === result?.sourceEnvironment)?.id || ''), targetId: String(connections?.find(c => c.environmentName === result?.targetEnvironment)?.id || '') } })}
+               className="text-sm bg-muted text-foreground border shadow-sm px-4 py-1.5 rounded-md font-medium hover:bg-muted/80 transition-colors flex items-center gap-2"
+             >
+               Compare Again
+             </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4">
+             <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Comparison ID</p>
+                <p className="text-sm font-medium">#{jobData?.id}</p>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Status</p>
+                <p className={`text-sm font-semibold capitalize ${jobData?.status === 'COMPLETED' ? 'text-emerald-500' : jobData?.status === 'FAILED' ? 'text-rose-500' : 'text-amber-500'}`}>
+                   {jobData?.status?.toLowerCase() || '-'}
+                </p>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Compared By</p>
+                <p className="text-sm font-medium truncate" title={jobData?.createdByEmail || '-'}>{getDisplayName(jobData?.createdByEmail)}</p>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Compared At</p>
+                <p className="text-sm font-medium">{jobData?.startedAt ? new Date(jobData.startedAt).toLocaleString() : '-'}</p>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Source Database</p>
+                <p className="text-sm font-medium">{sourceNameDisplay}</p>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Target Database</p>
+                <p className="text-sm font-medium">{targetNameDisplay}</p>
+             </div>
+             <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Duration</p>
+                <p className="text-sm font-medium">{formatDuration(jobData?.durationMs || null)}</p>
+             </div>
+             {jobData?.tags && jobData.tags !== '[]' && (
+               <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Tags</p>
+                  <div className="flex gap-1 flex-wrap mt-0.5">
+                     {JSON.parse(jobData.tags as unknown as string).map((tag: string, i: number) => (
+                        <span key={i} className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full font-medium">{tag}</span>
+                     ))}
+                  </div>
+               </div>
+             )}
+             {jobData?.reason && (
+               <div className="col-span-2 md:col-span-4">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Reason</p>
+                  <p className="text-sm font-medium italic">"{jobData.reason}"</p>
+               </div>
+             )}
+          </div>
+        </div>
+      ) : !isLoadingConn && (connections?.length ?? 0) < 2 ? (
         /* ── Empty state: not enough connections ── */
         <div className="bg-card border-2 border-dashed rounded-xl p-12 text-center space-y-4">
           <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
@@ -744,6 +842,29 @@ export default function Compare() {
                   Select both source and target databases to compare
                 </div>
               )}
+            </div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row gap-4 mt-4 border-t pt-4 border-border/50">
+            <div className="flex-1">
+               <label className="text-xs font-medium text-muted-foreground block mb-1">Reason (Optional)</label>
+               <input 
+                  type="text" 
+                  value={reason} 
+                  onChange={e => setReason(e.target.value)}
+                  placeholder="Why are you running this comparison?"
+                  className="w-full px-3 py-1.5 text-sm bg-background border rounded-md"
+               />
+            </div>
+            <div className="flex-1">
+               <label className="text-xs font-medium text-muted-foreground block mb-1">Tags (Comma separated)</label>
+               <input 
+                  type="text" 
+                  value={tagsInput} 
+                  onChange={e => setTagsInput(e.target.value)}
+                  placeholder="e.g. production, hotfix-123"
+                  className="w-full px-3 py-1.5 text-sm bg-background border rounded-md"
+               />
             </div>
           </div>
         </div>

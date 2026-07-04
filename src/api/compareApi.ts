@@ -15,6 +15,13 @@ export interface CompareJob {
     completedAt: string | null;
     errorMessage: string | null;
     resultData: any | null;
+    projectId: number;
+    createdById: number;
+    createdByEmail: string;
+    durationMs: number | null;
+    reason: string | null;
+    tags: string | null;
+    summaryStatistics: any | null;
 }
 
 export const createSnapshot = async (connectionId: number): Promise<Snapshot> => {
@@ -27,10 +34,13 @@ export const getSnapshots = async (connectionId: number, page = 0, size = 10) =>
     return response.data;
 };
 
-export const startCompareJob = async (sourceSnapshotId: number, targetSnapshotId: number): Promise<CompareJob> => {
+export const startCompareJob = async (sourceSnapshotId: number, targetSnapshotId: number, projectId: number, reason?: string, tags?: string[]): Promise<CompareJob> => {
     const response = await api.post('/compare/jobs', {
         sourceSnapshotId,
-        targetSnapshotId
+        targetSnapshotId,
+        projectId,
+        reason,
+        tags
     });
     return response.data;
 };
@@ -40,7 +50,7 @@ export const getCompareJob = async (jobId: number): Promise<CompareJob> => {
     return response.data;
 };
 
-export const getCompareJobs = async (page = 0, size = 10) => {
-    const response = await api.get(`/compare/jobs?page=${page}&size=${size}`);
+export const getCompareJobs = async (projectId: number, page = 0, size = 10) => {
+    const response = await api.get(`/compare/jobs?projectId=${projectId}&page=${page}&size=${size}`);
     return response.data;
 };

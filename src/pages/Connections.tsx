@@ -168,7 +168,7 @@ export default function Connections() {
       <PageHeader>
         <div className="w-full">
           <h2 className="text-xl font-bold tracking-tight">
-            {currentProject ? `${currentProject.name} — Connections` : 'Connections'}
+            {currentProject ? `${currentProject.name} > Connections` : 'Connections'}
           </h2>
           <p className="text-xs text-muted-foreground hidden lg:block mt-1">
             {currentProject ? `Manage database connections for ${currentProject.name}.` : 'Manage your secure database connection profiles.'}
