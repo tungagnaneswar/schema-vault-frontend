@@ -1,6 +1,6 @@
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
-export function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+export function ErrorFallback({ error, resetErrorBoundary }: { error: unknown; resetErrorBoundary: () => void }) {
   return (
     <div className="h-full w-full flex items-center justify-center p-6 min-h-[400px]">
       <div className="bg-card border rounded-xl p-8 max-w-md w-full shadow-lg text-center">
@@ -16,7 +16,7 @@ export function ErrorFallback({ error, resetErrorBoundary }: { error: Error; res
           <div className="bg-muted p-4 rounded-md text-left overflow-auto mb-6">
             <p className="text-xs font-mono text-rose-500 font-semibold mb-1">Error Details:</p>
             <pre className="text-[10px] font-mono text-muted-foreground break-all whitespace-pre-wrap">
-              {error.message}
+              {error instanceof Error ? error.message : String(error)}
             </pre>
           </div>
         )}
