@@ -9,7 +9,7 @@ import {
   ChevronDown, ChevronUp, Loader2, Download, Database,
   Key, Link2, ListTree, Zap, Code2, Workflow, Hash, Table2, AlertCircle,
   Eye, Box, ShieldAlert, ShieldCheck, Copy, Plus, X, ArrowLeft, History,
-  PlugZap, Camera, Columns3, Scale, Sparkles
+  PlugZap, Camera, Columns3, Scale, Sparkles, MonitorSmartphone
 } from 'lucide-react';
 import clsx from 'clsx';
 import PageHeader from '../components/PageHeader';
@@ -413,6 +413,7 @@ export default function Compare() {
   const [expandedTables, setExpandedTables] = useState<string[]>([]);
   const [showDiffOnly, setShowDiffOnly] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('tables');
+  const [dismissMobileWarning, setDismissMobileWarning] = useState(() => localStorage.getItem('hideCompareMobileWarning') === 'true');
 
   // Redirect to projects if no projectId
   if (!projectIdParam) {
@@ -688,6 +689,25 @@ export default function Compare() {
           </p>
         </div>
       </PageHeader>
+
+      {!dismissMobileWarning && (
+        <div className="md:hidden flex items-start gap-3 bg-blue-500/10 border border-blue-500/20 text-blue-600 rounded-lg p-4 mb-6 relative">
+          <MonitorSmartphone className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="pr-6">
+            <h4 className="text-sm font-semibold mb-1">For the best experience</h4>
+            <p className="text-xs opacity-90">Analyzing schema differences side-by-side requires significant screen width. Please use a desktop device for the best view.</p>
+          </div>
+          <button 
+            onClick={() => {
+              setDismissMobileWarning(true);
+              localStorage.setItem('hideCompareMobileWarning', 'true');
+            }}
+            className="absolute top-3 right-3 p-1 hover:bg-blue-500/20 rounded-md transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* ─── Selector card / Metadata block ────────────────────────────── */}
       {jobIdParam ? (

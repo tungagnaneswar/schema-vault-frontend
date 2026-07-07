@@ -8,6 +8,8 @@ import PageHeader from '../components/PageHeader';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../store/store';
+import { toast } from 'sonner';
+import { ProjectCardSkeleton } from '../components/Skeletons';
 
 export default function Projects() {
   const queryClient = useQueryClient();
@@ -27,6 +29,10 @@ export default function Projects() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       closeModal();
+      toast.success('Project created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to create project');
     }
   });
 
@@ -35,6 +41,10 @@ export default function Projects() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       setProjectToDelete(null);
+      toast.success('Project deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to delete project');
     }
   });
 
@@ -78,7 +88,11 @@ export default function Projects() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <ProjectCardSkeleton key={i} />
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {projects?.map((project, i) => (
@@ -130,8 +144,22 @@ export default function Projects() {
             </motion.div>
           ))}
           {projects?.length === 0 && (
-            <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
-              No projects found. Click "Add Project" to get started.
+            <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed rounded-xl bg-muted/10">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <Folder className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Welcome to SchemaDiff!</h3>
+              <p className="text-muted-foreground mb-6 max-w-sm">
+                Get started by creating your first project to organize and compare your database schemas.
+              </p>
+              {user?.role !== 'VIEWER' && (
+                <button
+                  onClick={openCreate}
+                  className="bg-primary text-primary-foreground px-5 py-2.5 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm"
+                >
+                  <Plus className="w-4 h-4" /> Create First Project
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -21,6 +21,8 @@ import SuperAdminPanel from './pages/SuperAdminPanel';
 import AdminPanel from './pages/AdminPanel';
 import Profile from './pages/Profile';
 import React from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorFallback } from './components/ErrorFallback';
 
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
@@ -56,48 +58,50 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Auth Routes */}
-        <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-          <Route path="/auth/verify-otp" element={<VerifyOtp />} />
-          <Route path="/auth/reset-password" element={<ResetPassword />} />
-        </Route>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <BrowserRouter>
+        <Routes>
+          {/* Auth Routes */}
+          <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+            <Route path="/auth/verify-otp" element={<VerifyOtp />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
+          </Route>
 
-        {/* Dashboard Routes */}
-        <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:projectId/connections" element={<Connections />} />
-          <Route path="/projects/:projectId/compare" element={<Compare />} />
-          <Route path="/projects/:projectId/compare/:jobId" element={<Compare />} />
-          <Route path="/projects/:projectId/compare-history" element={<CompareHistory />} />
-          <Route path="/connections" element={<Navigate to="/projects" replace />} />
-          <Route path="/compare" element={<Navigate to="/projects" replace />} />
-          <Route
-            path="/super-admin"
-            element={
-              <SuperAdminRoute>
-                <SuperAdminPanel />
-              </SuperAdminRoute>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminPanel />
-              </AdminRoute>
-            }
-          />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+          {/* Dashboard Routes */}
+          <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:projectId/connections" element={<Connections />} />
+            <Route path="/projects/:projectId/compare" element={<Compare />} />
+            <Route path="/projects/:projectId/compare/:jobId" element={<Compare />} />
+            <Route path="/projects/:projectId/compare-history" element={<CompareHistory />} />
+            <Route path="/connections" element={<Navigate to="/projects" replace />} />
+            <Route path="/compare" element={<Navigate to="/projects" replace />} />
+            <Route
+              path="/super-admin"
+              element={
+                <SuperAdminRoute>
+                  <SuperAdminPanel />
+                </SuperAdminRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminPanel />
+                </AdminRoute>
+              }
+            />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

@@ -4,10 +4,14 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { motion } from 'framer-motion';
-import { Plus, Database, Trash2, ShieldCheck, Loader2, Pencil, X, Folder, ArrowLeft, GitCompare } from 'lucide-react';
+import { Plus, Database, Trash2, ShieldCheck, Loader2, Pencil, X, Folder, ArrowLeft, GitCompare, Clock, CheckCircle2, AlertCircle, User as UserIcon, Timer, Tag } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { getProjects, type Project } from '../api/projectsApi';
 import { getEnvironmentsByProject, type Environment } from '../api/environmentsApi';
+import { getCompareJobs } from '../api/compareApi';
+import clsx from 'clsx';
+import { toast } from 'sonner';
+import { ConnectionCardSkeleton } from '../components/Skeletons';
 interface DbConnection {
   id: number;
   name: string;
@@ -61,6 +65,7 @@ export default function Connections() {
   const [editingConn, setEditingConn] = useState<DbConnection | null>(null);
   const [connToDelete, setConnToDelete] = useState<DbConnection | null>(null);
   const [formData, setFormData] = useState(emptyForm);
+  const [historyPage, setHistoryPage] = useState(0);
 
   // Redirect to projects if no projectId
   if (!projectIdParam) {
@@ -86,6 +91,18 @@ export default function Connections() {
     enabled: !!projectIdParam
   });
 
+  const { data: jobsData, isLoading: isLoadingJobs } = useQuery({
+    queryKey: ['compareJobs', projectIdParam, historyPage],
+    queryFn: () => getCompareJobs(Number(projectIdParam), historyPage, 10),
+    enabled: !!projectIdParam
+  });
+
+  const formatDuration = (ms: number | null) => {
+    if (!ms) return '-';
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(1)}s`;
+  };
+
   const filteredConnections = connections?.filter(c => c.projectId === parseInt(projectIdParam));
 
   const currentProject = projects?.find(p => p.id === parseInt(projectIdParam));
@@ -98,6 +115,10 @@ export default function Connections() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       closeModal();
+      toast.success('Connection added successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to add connection');
     }
   });
 
@@ -109,6 +130,10 @@ export default function Connections() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       closeModal();
+      toast.success('Connection updated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to update connection');
     }
   });
 
@@ -119,6 +144,10 @@ export default function Connections() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       setConnToDelete(null);
+      toast.success('Connection deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to delete connection');
     }
   });
 
@@ -214,22 +243,44 @@ export default function Connections() {
           );
         })()}
 
-          {/* Add Connection — hidden once 2 connections exist */}
-          {user?.role !== 'VIEWER' && (filteredConnections?.length ?? 0) < 2 && (
-            <button
-              onClick={openCreate}
-              className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="w-4 h-4" /> Add Connection
-            </button>
-          )}
+          {/* Add Connection */}
+          {user?.role !== 'VIEWER' && (() => {
+            const hasMaxConnections = (filteredConnections?.length ?? 0) >= 2;
+            return (
+              <div
+                className="relative group"
+                title={hasMaxConnections ? 'Maximum of 2 connections allowed' : undefined}
+              >
+                <button
+                  onClick={openCreate}
+                  disabled={hasMaxConnections}
+                  className={`px-4 py-2 rounded-md font-medium flex items-center gap-2 transition-colors ${
+                    hasMaxConnections
+                      ? 'bg-muted text-muted-foreground opacity-60 cursor-not-allowed'
+                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  }`}
+                >
+                  <Plus className="w-4 h-4" /> Add Connection
+                </button>
+                {hasMaxConnections && (
+                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs px-3 py-1.5 text-xs rounded-md bg-popover border shadow-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity z-50">
+                    Maximum of 2 connections allowed
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <ConnectionCardSkeleton key={i} />
+          ))}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredConnections?.map((conn, i) => (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -297,6 +348,113 @@ export default function Connections() {
           )}
         </div>
       )}
+
+      {/* --- COMPARE HISTORY SECTION --- */}
+      <div className="mt-10">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold tracking-tight">Compare History</h3>
+          <button
+            onClick={() => navigate(`/projects/${projectIdParam}/compare-history`)}
+            className="text-sm text-primary hover:underline"
+          >
+            View All
+          </button>
+        </div>
+
+        <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
+          {isLoadingJobs ? (
+            <div className="p-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+          ) : jobsData?.content?.length === 0 ? (
+            <div className="p-12 text-center text-muted-foreground">No compare jobs history found.</div>
+          ) : (
+            <div className="divide-y">
+              {jobsData?.content?.map((job: any) => {
+                const tags = job.tags ? JSON.parse(job.tags) : [];
+                return (
+                  <div key={job.id} onClick={() => navigate(`/projects/${projectIdParam}/compare/${job.id}`)} className="p-5 flex items-center justify-between hover:bg-muted/30 transition-colors cursor-pointer">
+                    <div className="flex items-start gap-4">
+                      <div className="mt-1">
+                        {job.status === 'COMPLETED' ? (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        ) : job.status === 'FAILED' ? (
+                          <AlertCircle className="w-5 h-5 text-rose-500" />
+                        ) : (
+                          <Clock className="w-5 h-5 text-amber-500 animate-pulse" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <h4 className="font-semibold text-base hover:text-primary transition-colors">Job #{job.id}</h4>
+                          {tags.length > 0 && (
+                            <div className="flex gap-1">
+                              {tags.map((tag: string, i: number) => (
+                                <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
+                                  <Tag className="w-3 h-3" /> {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {job.reason && (
+                          <p className="text-sm text-foreground mt-1 mb-2 italic">"{job.reason}"</p>
+                        )}
+                        
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <UserIcon className="w-3.5 h-3.5" />
+                            {job.createdByEmail || 'Unknown User'}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Timer className="w-3.5 h-3.5" />
+                            {formatDuration(job.durationMs)}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-mono bg-muted/50 px-2 py-0.5 rounded">
+                            <span className="opacity-70">SRC:</span> {job.sourceSnapshotId}
+                            <span className="mx-1 opacity-50">&rarr;</span>
+                            <span className="opacity-70">TGT:</span> {job.targetSnapshotId}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="text-right text-sm">
+                      <p className="font-medium">{new Date(job.startedAt).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                      })}</p>
+                      <p className={clsx(
+                        "mt-1 text-xs font-semibold uppercase tracking-wider",
+                        job.status === 'COMPLETED' ? 'text-emerald-500' :
+                        job.status === 'FAILED' ? 'text-rose-500' : 'text-amber-500'
+                      )}>{job.status}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        
+        {jobsData?.content?.length > 0 && (
+          <div className="flex justify-between items-center mt-4">
+            <button 
+                disabled={historyPage === 0} 
+                onClick={() => setHistoryPage(p => Math.max(0, p - 1))}
+                className="px-4 py-2 border rounded-md disabled:opacity-50 text-sm font-medium hover:bg-muted transition-colors"
+            >
+                Previous
+            </button>
+            <span className="text-sm text-muted-foreground">Page {historyPage + 1} of {jobsData?.totalPages || 1}</span>
+            <button 
+                disabled={jobsData?.last} 
+                onClick={() => setHistoryPage(p => p + 1)}
+                className="px-4 py-2 border rounded-md disabled:opacity-50 text-sm font-medium hover:bg-muted transition-colors"
+            >
+                Next
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Create / Edit Modal */}
       {isModalOpen && createPortal(
@@ -423,7 +581,7 @@ export default function Connections() {
             </div>
             <div className="p-6">
               <p className="text-sm text-muted-foreground">
-                Are you sure you want to delete the connection <strong>{connToDelete.name}</strong>? This action cannot be undone.
+                Are you sure you want to delete the connection <strong>{connToDelete.name}</strong> {connToDelete.environmentName && <>({connToDelete.environmentName})</>}? This action cannot be undone.
               </p>
               <div className="mt-6 flex justify-end gap-3">
                 <button 

@@ -5,6 +5,7 @@ import { logout } from '../store/authSlice';
 import { type RootState } from '../store/store';
 import { LayoutDashboard, LogOut, ShieldCheck, Sun, Moon, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User } from 'lucide-react';
 import clsx from 'clsx';
+import { Toaster } from 'sonner';
 
 export default function DashboardLayout() {
   const dispatch = useDispatch();
@@ -218,6 +219,7 @@ export default function DashboardLayout() {
           <Outlet />
         </div>
       </main>
+      <Toaster position="top-right" richColors />
     </div>
   );
 }
