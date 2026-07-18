@@ -305,11 +305,13 @@ function PrimaryKeySection({ pkDiff }: { pkDiff: PrimaryKeyDiff | null }) {
 
 // ─── Generic ObjectDiff list (for functions, procedures, sequences tabs) ──────
 
-function ObjectDiffList({ diffs, showDiffOnly, sourceLabel, targetLabel }: {
+function ObjectDiffList({ diffs, showDiffOnly, sourceLabel, targetLabel, sourceEnvironment, targetEnvironment }: {
   diffs: ObjectDiff[];
   showDiffOnly: boolean;
   sourceLabel: string;
   targetLabel: string;
+  sourceEnvironment?: string;
+  targetEnvironment?: string;
 }) {
   const filtered = diffs.filter(d => showDiffOnly ? d.status !== 'IDENTICAL' : true);
   const [expanded, setExpanded] = useState<string[]>([]);
@@ -331,8 +333,8 @@ function ObjectDiffList({ diffs, showDiffOnly, sourceLabel, targetLabel }: {
       <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border rounded-lg bg-muted/30">
         <span>Object Name</span>
         <span>Status</span>
-        <span className="truncate" title={sourceLabel}>⬤ {sourceLabel}</span>
-        <span className="truncate" title={targetLabel}>⬤ {targetLabel}</span>
+        <span className="truncate" title={sourceLabel}>⬤ {sourceLabel}{sourceEnvironment ? ` (${sourceEnvironment})` : ''}</span>
+        <span className="truncate" title={targetLabel}>⬤ {targetLabel}{targetEnvironment ? ` (${targetEnvironment})` : ''}</span>
       </div>
 
       {filtered.map((diff) => {
@@ -992,6 +994,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
 
@@ -1001,6 +1005,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
 
@@ -1010,6 +1016,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
 
@@ -1019,6 +1027,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
 
@@ -1028,6 +1038,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
 
@@ -1037,6 +1049,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
 
@@ -1046,6 +1060,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
 
@@ -1055,6 +1071,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
 
@@ -1064,6 +1082,8 @@ export default function Compare() {
                   showDiffOnly={showDiffOnly}
                   sourceLabel={sourceConn?.name ?? 'Source'}
                   targetLabel={targetConn?.name ?? 'Target'}
+                  sourceEnvironment={sourceConn?.environmentName}
+                  targetEnvironment={targetConn?.environmentName}
                 />
               )}
             </motion.div>
@@ -1084,13 +1104,15 @@ export default function Compare() {
 //  Tables Tab View
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sourceLabel, targetLabel }: {
+function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sourceLabel, targetLabel, sourceEnvironment, targetEnvironment }: {
   tableDiffs: TableDiff[];
   expandedTables: string[];
   toggleTable: (name: string) => void;
   showDiffOnly: boolean;
   sourceLabel: string;
   targetLabel: string;
+  sourceEnvironment?: string;
+  targetEnvironment?: string;
 }) {
   return (
     <div className="space-y-3">
@@ -1098,8 +1120,8 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
       <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground border rounded-lg bg-muted/30">
         <span>Table / Column</span>
         <span>Status</span>
-        <span className="truncate" title={sourceLabel}>⬤ {sourceLabel}</span>
-        <span className="truncate" title={targetLabel}>⬤ {targetLabel}</span>
+        <span className="truncate" title={sourceLabel}>⬤ {sourceLabel}{sourceEnvironment ? ` (${sourceEnvironment})` : ''}</span>
+        <span className="truncate" title={targetLabel}>⬤ {targetLabel}{targetEnvironment ? ` (${targetEnvironment})` : ''}</span>
       </div>
 
       {tableDiffs.map((tableDiff) => {
