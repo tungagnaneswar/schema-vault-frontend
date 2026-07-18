@@ -3,6 +3,7 @@ import { Database, GitCompare, Activity, Users, Loader2 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '../api/dashboardApi';
+import { DashboardSkeleton } from '../components/Skeletons';
 
 export default function Dashboard() {
   const { data, isLoading } = useQuery({
@@ -27,84 +28,86 @@ export default function Dashboard() {
       </PageHeader>
 
       {isLoading ? (
-        <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+        <DashboardSkeleton />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={stat.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1, duration: 0.4 }}
-              className="p-6 bg-card border rounded-xl shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{stat.name}</p>
-                  <p className="text-3xl font-bold mt-2">{stat.value}</p>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, i) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={stat.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1, duration: 0.4 }}
+                className="p-6 bg-card border rounded-xl shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">{stat.name}</p>
+                    <p className="text-3xl font-bold mt-2">{stat.value}</p>
+                  </div>
+                  <div className={`p-3 rounded-full ${stat.bg}`}>
+                    <Icon className={`w-6 h-6 ${stat.color}`} />
+                  </div>
                 </div>
-                <div className={`p-3 rounded-full ${stat.bg}`}>
-                  <Icon className={`w-6 h-6 ${stat.color}`} />
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
-        </div>
-      )}
+              </motion.div>
+            );
+          })}
+          </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.4 }}
-        className="bg-card border rounded-xl shadow-sm p-6 mt-8"
-      >
-        <h3 className="text-lg font-semibold mb-4">Recent Comparisons</h3>
-        <div className="text-sm">
-          {data?.recentComparisons && data.recentComparisons.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b text-muted-foreground">
-                    <th className="pb-3 font-medium px-4">Project</th>
-                    <th className="pb-3 font-medium px-4">Source</th>
-                    <th className="pb-3 font-medium px-4">Target</th>
-                    <th className="pb-3 font-medium px-4">Status</th>
-                    <th className="pb-3 font-medium px-4">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.recentComparisons.map((comp) => (
-                    <tr key={comp.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                      <td className="py-3 px-4">{comp.projectName || 'Default'}</td>
-                      <td className="py-3 px-4">{comp.sourceEnvironmentName}</td>
-                      <td className="py-3 px-4">{comp.targetEnvironmentName}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          comp.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
-                          comp.status === 'FAILED' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' :
-                          'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
-                        }`}>
-                          {comp.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
-                        {new Date(comp.startedAt).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
+            className="bg-card border rounded-xl shadow-sm p-6 mt-8"
+          >
+            <h3 className="text-lg font-semibold mb-4">Recent Comparisons</h3>
+            <div className="text-sm">
+              {data?.recentComparisons && data.recentComparisons.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b text-muted-foreground">
+                        <th className="pb-3 font-medium px-4">Project</th>
+                        <th className="pb-3 font-medium px-4">Source</th>
+                        <th className="pb-3 font-medium px-4">Target</th>
+                        <th className="pb-3 font-medium px-4">Status</th>
+                        <th className="pb-3 font-medium px-4">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.recentComparisons.map((comp) => (
+                        <tr key={comp.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                          <td className="py-3 px-4">{comp.projectName || 'Default'}</td>
+                          <td className="py-3 px-4">{comp.sourceEnvironmentName}</td>
+                          <td className="py-3 px-4">{comp.targetEnvironmentName}</td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              comp.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                              comp.status === 'FAILED' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' :
+                              'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                            }`}>
+                              {comp.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                            {new Date(comp.startedAt).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="py-8 text-center border-2 border-dashed rounded-lg bg-muted/20 text-muted-foreground">
+                  No recent comparisons. Go to Compare tab to start!
+                </p>
+              )}
             </div>
-          ) : (
-            <p className="py-8 text-center border-2 border-dashed rounded-lg bg-muted/20 text-muted-foreground">
-              No recent comparisons. Go to Compare tab to start!
-            </p>
-          )}
-        </div>
-      </motion.div>
+          </motion.div>
+        </>
+      )}
     </div>
   );
 }

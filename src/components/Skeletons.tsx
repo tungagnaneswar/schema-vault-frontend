@@ -44,3 +44,31 @@ export function ConnectionCardSkeleton() {
     </div>
   );
 }
+
+export function DashboardSkeleton() {
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="p-6 bg-card border rounded-xl shadow-sm flex items-center justify-between h-28">
+            <div className="flex flex-col gap-2">
+              <Skeleton className="w-32 h-4" />
+              <Skeleton className="w-16 h-8 mt-1" />
+            </div>
+            <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+          </div>
+        ))}
+      </div>
+      
+      <div className="bg-card border rounded-xl shadow-sm p-6 mt-8">
+        <Skeleton className="w-48 h-6 mb-6" />
+        <div className="space-y-4">
+          <Skeleton className="w-full h-10 rounded-md" />
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="w-full h-12 rounded-md" />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
