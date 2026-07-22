@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Database, GitCompare, Activity, Users, Loader2 } from 'lucide-react';
+import { Database, GitCompare, Activity, Users } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '../api/dashboardApi';
