@@ -6,6 +6,7 @@ import { type RootState } from '../store/store';
 import { LayoutDashboard, LogOut, ShieldCheck, Sun, Moon, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User } from 'lucide-react';
 import clsx from 'clsx';
 import { Toaster } from 'sonner';
+import { GLOBAL_ROLES } from '../constants/roles';
 
 export default function DashboardLayout() {
   const dispatch = useDispatch();
@@ -53,12 +54,12 @@ export default function DashboardLayout() {
     { name: 'Projects', path: '/projects', icon: Folder },
   ];
 
-  const adminNavItems = ['SUPER_ADMIN', 'ADMIN', 'DEVOPS_ADMIN'].includes(user?.role || '')
-    ? [{ name: 'Admin Panel', path: '/admin', icon: Users }]
+  const adminNavItems = user?.role === GLOBAL_ROLES.SUPER_ADMIN || user?.role === GLOBAL_ROLES.ADMIN
+    ? [{ name: 'Teams', path: '/teams', icon: Users }]
     : [];
 
-  const superAdminNavItems = user?.role === 'SUPER_ADMIN'
-    ? [{ name: 'Super Admin', path: '/super-admin', icon: ShieldCheck }]
+  const superAdminNavItems = user?.role === GLOBAL_ROLES.SUPER_ADMIN
+    ? [{ name: 'Super Admin Dashboard', path: '/super-admin-dashboard', icon: ShieldCheck }]
     : [];
 
   const navItems = [...baseNavItems, ...adminNavItems, ...superAdminNavItems];

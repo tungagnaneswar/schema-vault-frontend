@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { type RootState } from './store/store';
+import { GLOBAL_ROLES } from './constants/roles';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -12,13 +13,13 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import VerifyOtp from './pages/VerifyOtp';
 import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import Projects from './pages/Projects';
 import Connections from './pages/Connections';
 import Compare from './pages/Compare';
 import CompareHistory from './pages/CompareHistory';
-import SuperAdminPanel from './pages/SuperAdminPanel';
-import AdminPanel from './pages/AdminPanel';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import Teams from './pages/Teams';
 import Profile from './pages/Profile';
 import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -42,7 +43,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const user = useSelector((state: RootState) => state.auth.user);
-  if (user?.role !== 'SUPER_ADMIN') {
+  if (user?.role !== GLOBAL_ROLES.SUPER_ADMIN) {
     return <Navigate to="/dashboard" replace />;
   }
   return children;
@@ -50,7 +51,7 @@ const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const user = useSelector((state: RootState) => state.auth.user);
-  if (user?.role !== 'SUPER_ADMIN' && user?.role !== 'ADMIN' && user?.role !== 'DEVOPS_ADMIN') {
+  if (user?.role !== GLOBAL_ROLES.SUPER_ADMIN && user?.role !== GLOBAL_ROLES.ADMIN) {
     return <Navigate to="/dashboard" replace />;
   }
   return children;
@@ -73,7 +74,8 @@ function App() {
           {/* Dashboard Routes */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin-dashboard" element={<Navigate to="/dashboard" replace />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:projectId/connections" element={<Connections />} />
@@ -82,22 +84,28 @@ function App() {
             <Route path="/projects/:projectId/compare-history" element={<CompareHistory />} />
             <Route path="/connections" element={<Navigate to="/projects" replace />} />
             <Route path="/compare" element={<Navigate to="/projects" replace />} />
+            
+            {/* Super Admin Dashboard Route */}
             <Route
-              path="/super-admin"
+              path="/super-admin-dashboard"
               element={
                 <SuperAdminRoute>
-                  <SuperAdminPanel />
+                  <SuperAdminDashboard />
                 </SuperAdminRoute>
               }
             />
+            <Route path="/super-admin" element={<Navigate to="/super-admin-dashboard" replace />} />
+
+            {/* Teams Route */}
             <Route
-              path="/admin"
+              path="/teams"
               element={
                 <AdminRoute>
-                  <AdminPanel />
+                  <Teams />
                 </AdminRoute>
               }
             />
+            <Route path="/admin" element={<Navigate to="/teams" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>

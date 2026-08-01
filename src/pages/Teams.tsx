@@ -3,8 +3,9 @@ import { Users, Plus, Trash2, Database, Shield, Settings, Edit } from 'lucide-re
 import { teamsApi, type Team, type TeamMember, type TeamDbConnection, type MemberProject } from '../api/teamsApi';
 import api from '../api/axios';
 import { createPortal } from 'react-dom';
+import { TEAM_ROLES, CONNECTION_ROLES } from '../constants/roles';
 
-export default function AdminPanel() {
+export default function Teams() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   
@@ -34,11 +35,11 @@ export default function AdminPanel() {
 
   const [availableUsers, setAvailableUsers] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [newMemberRole, setNewMemberRole] = useState('TEAM_MEMBER');
+  const [newMemberRole, setNewMemberRole] = useState<string>(TEAM_ROLES.MEMBER);
 
   const [availableConnections, setAvailableConnections] = useState<any[]>([]);
   const [selectedConnection, setSelectedConnection] = useState<string>('');
-  const [selectedPermission, setSelectedPermission] = useState<string>('READ');
+  const [selectedPermission, setSelectedPermission] = useState<string>(CONNECTION_ROLES.READ);
 
   useEffect(() => {
     fetchTeams();
@@ -64,15 +65,24 @@ export default function AdminPanel() {
   };
 
   const fetchDropdownData = async () => {
-    try {
-      const connsRes = await api.get('/connections');
-      const data = connsRes.data.content ? connsRes.data.content : connsRes.data;
-      setAvailableConnections(Array.isArray(data) ? data : []);
-      
-      const usersRes = await teamsApi.getAvailableUsers();
-      setAvailableUsers(Array.isArray(usersRes) ? usersRes : []);
-    } catch (err) {
-      console.error("Failed to fetch dropdown data", err);
+    const [connectionsResult, usersResult] = await Promise.allSettled([
+      api.get('/connections'),
+      teamsApi.getAvailableUsers(),
+    ]);
+
+    if (connectionsResult.status === 'fulfilled') {
+      const responseData = connectionsResult.value.data;
+      const connectionsData = responseData.content ?? responseData;
+      setAvailableConnections(Array.isArray(connectionsData) ? connectionsData : []);
+    } else {
+      console.error('Failed to fetch available connections', connectionsResult.reason);
+    }
+
+    if (usersResult.status === 'fulfilled') {
+      setAvailableUsers(Array.isArray(usersResult.value) ? usersResult.value : []);
+    } else {
+      console.error('Failed to fetch available users', usersResult.reason);
+      setError('Failed to load users. Please refresh the page and try again.');
     }
   };
 
@@ -145,7 +155,7 @@ export default function AdminPanel() {
     try {
       await teamsApi.addTeamMember(selectedTeam.id, Number(selectedUserId), newMemberRole);
       setSelectedUserId('');
-      setNewMemberRole('TEAM_MEMBER');
+      setNewMemberRole(TEAM_ROLES.MEMBER);
       fetchTeamDetails(selectedTeam.id);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to add member');
@@ -376,9 +386,8 @@ export default function AdminPanel() {
                           onChange={(e) => setNewMemberRole(e.target.value)}
                           required
                         >
-                          <option value="TEAM_MEMBER">Team Member</option>
-                          <option value="TEAM_ADMIN">Team Admin</option>
-                          <option value="TEAM_OWNER">Team Owner</option>
+                          <option value={TEAM_ROLES.MEMBER}>Member</option>
+                          <option value={TEAM_ROLES.ADMIN}>Admin</option>
                         </select>
                         <button type="submit" className="h-9 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors shadow">
                           Add Member
@@ -417,12 +426,11 @@ export default function AdminPanel() {
                               <td className="px-4 py-3">
                                 <select 
                                   className="h-8 rounded border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                  value={member.teamRole || 'TEAM_MEMBER'}
+                                  value={member.teamRole || TEAM_ROLES.MEMBER}
                                   onChange={(e) => handleUpdateRole(member.userId, e.target.value)}
                                 >
-                                  <option value="TEAM_MEMBER">Team Member</option>
-                                  <option value="TEAM_ADMIN">Team Admin</option>
-                                  <option value="TEAM_OWNER">Team Owner</option>
+                                  <option value={TEAM_ROLES.MEMBER}>Member</option>
+                                  <option value={TEAM_ROLES.ADMIN}>Admin</option>
                                 </select>
                               </td>
                               <td className="px-4 py-3 text-right">
@@ -465,7 +473,7 @@ export default function AdminPanel() {
                       >
                         <option value="" disabled>Select a connection...</option>
                         {availableConnections
-                          .filter(c => c.permissionLevel === 'ADMIN' && !connections.some(conn => conn.connectionId === c.id))
+                          .filter(c => c.permissionLevel === CONNECTION_ROLES.ADMIN && !connections.some(conn => conn.connectionId === c.id))
                           .map(c => (
                           <option key={c.id} value={c.id}>{c.name} ({c.environment})</option>
                         ))}
@@ -476,9 +484,9 @@ export default function AdminPanel() {
                         onChange={(e) => setSelectedPermission(e.target.value)}
                         required
                       >
-                        <option value="READ">Read</option>
-                        <option value="WRITE">Write</option>
-                        <option value="ADMIN">Admin</option>
+                        <option value={CONNECTION_ROLES.READ}>Read</option>
+                        <option value={CONNECTION_ROLES.WRITE}>Write</option>
+                        <option value={CONNECTION_ROLES.ADMIN}>Admin</option>
                       </select>
                       <button type="submit" className="h-9 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors shadow">
                         Assign
@@ -710,9 +718,9 @@ export default function AdminPanel() {
                             value={assigned.permission}
                             onChange={(e) => handleToggleMemberProject(conn.connectionId, true, e.target.value)}
                           >
-                            <option value="READ">Read</option>
-                            <option value="WRITE">Write</option>
-                            <option value="ADMIN">Admin</option>
+                            <option value={CONNECTION_ROLES.READ}>Read</option>
+                            <option value={CONNECTION_ROLES.WRITE}>Write</option>
+                            <option value={CONNECTION_ROLES.ADMIN}>Admin</option>
                           </select>
                         )}
                       </div>

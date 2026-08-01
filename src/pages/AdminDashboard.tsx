@@ -4,25 +4,35 @@ import PageHeader from '../components/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '../api/dashboardApi';
 import { DashboardSkeleton } from '../components/Skeletons';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
+import { GLOBAL_ROLES } from '../constants/roles';
 
-export default function Dashboard() {
+export default function AdminDashboard() {
+  const { user } = useSelector((state: RootState) => state.auth);
   const { data, isLoading } = useQuery({
     queryKey: ['dashboardStats'],
     queryFn: getDashboardStats,
   });
 
+  const isSuperAdmin = user?.role === GLOBAL_ROLES.SUPER_ADMIN;
+
+  const fourthStat = isSuperAdmin
+    ? { name: 'Active Users', value: data?.activeUsers ?? 0, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' }
+    : { name: 'Teams', value: data?.teams ?? 0, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' };
+
   const stats = [
     { name: 'Active Connections', value: data?.activeConnections ?? 0, icon: Database, color: 'text-blue-500', bg: 'bg-blue-500/10' },
     { name: 'Schemas Compared', value: data?.schemasCompared ?? 0, icon: GitCompare, color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { name: 'System Alerts', value: data?.systemAlerts ?? 0, icon: Activity, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-    { name: 'Active Users', value: data?.activeUsers ?? 0, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    fourthStat,
   ];
 
   return (
     <div className="space-y-6">
       <PageHeader>
         <div className="w-full">
-          <h2 className="text-xl font-bold tracking-tight">Dashboard</h2>
+          <h2 className="text-xl font-bold tracking-tight">Admin Dashboard</h2>
           <p className="text-xs text-muted-foreground hidden lg:block">Overview of your database environments and comparison history.</p>
         </div>
       </PageHeader>

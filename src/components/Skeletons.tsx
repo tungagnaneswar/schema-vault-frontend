@@ -72,3 +72,60 @@ export function DashboardSkeleton() {
     </>
   );
 }
+
+export function SuperAdminTableSkeleton({ activeTab = 'users' }: { activeTab?: 'users' | 'logs' }) {
+  return (
+    <div className="bg-card border rounded-lg overflow-hidden shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-muted/50 text-muted-foreground border-b">
+            {activeTab === 'users' ? (
+              <tr>
+                <th className="px-6 py-3 font-medium">Email</th>
+                <th className="px-6 py-3 font-medium">Role</th>
+                <th className="px-6 py-3 font-medium">Status</th>
+                <th className="px-6 py-3 font-medium">Created</th>
+                <th className="px-6 py-3 font-medium">Actions</th>
+              </tr>
+            ) : (
+              <tr>
+                <th className="px-6 py-3 font-medium">Time</th>
+                <th className="px-6 py-3 font-medium">User</th>
+                <th className="px-6 py-3 font-medium">Action</th>
+                <th className="px-6 py-3 font-medium">Details</th>
+                <th className="px-6 py-3 font-medium">IP / Device</th>
+              </tr>
+            )}
+          </thead>
+          <tbody className="divide-y">
+            {[...Array(6)].map((_, i) => (
+              <tr key={i}>
+                {activeTab === 'users' ? (
+                  <>
+                    <td className="px-6 py-3.5"><Skeleton className="w-44 h-4" /></td>
+                    <td className="px-6 py-3.5"><Skeleton className="w-16 h-5 rounded-md" /></td>
+                    <td className="px-6 py-3.5"><Skeleton className="w-20 h-4" /></td>
+                    <td className="px-6 py-3.5"><Skeleton className="w-24 h-4" /></td>
+                    <td className="px-6 py-3.5"><Skeleton className="w-20 h-7 rounded-md" /></td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-6 py-3.5"><Skeleton className="w-32 h-4" /></td>
+                    <td className="px-6 py-3.5"><Skeleton className="w-40 h-4" /></td>
+                    <td className="px-6 py-3.5"><Skeleton className="w-20 h-5 rounded-md" /></td>
+                    <td className="px-6 py-3.5"><Skeleton className="w-48 h-4" /></td>
+                    <td className="px-6 py-3.5 space-y-1">
+                      <Skeleton className="w-28 h-3" />
+                      <Skeleton className="w-36 h-3" />
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+

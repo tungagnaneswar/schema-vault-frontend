@@ -30,7 +30,24 @@ export default function Login() {
       navigate('/dashboard');
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      const errorCode = err.response?.data?.error;
+      if (errorCode === 'ACCOUNT_NOT_VERIFIED') {
+        // Trigger OTP resend and navigate to verification step
+        api.post('/auth/register', { email, password }).then(() => {
+          navigate('/register', { 
+            state: { 
+              email, 
+              password, 
+              step: 2, 
+              message: 'Account not verified. A new OTP has been sent to your email.' 
+            } 
+          });
+        }).catch(() => {
+          setError('Account not verified. Please try registering again to get a new OTP.');
+        });
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      }
     }
   });
 

@@ -12,6 +12,7 @@ import { getCompareJobs } from '../api/compareApi';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { ConnectionCardSkeleton } from '../components/Skeletons';
+import { CONNECTION_ROLES } from '../constants/roles';
 interface DbConnection {
   id: number;
   name: string;
@@ -53,14 +54,10 @@ const ENGINE_PORTS: Record<string, number> = {
   MYSQL: 3306,
 };
 
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
-
 export default function Connections() {
   const queryClient = useQueryClient();
   const { projectId: projectIdParam } = useParams();
   const navigate = useNavigate();
-  const { user } = useSelector((state: RootState) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingConn, setEditingConn] = useState<DbConnection | null>(null);
   const [connToDelete, setConnToDelete] = useState<DbConnection | null>(null);
@@ -244,7 +241,7 @@ export default function Connections() {
         })()}
 
           {/* Add Connection */}
-          {user?.role !== 'VIEWER' && (() => {
+          {(() => {
             const hasMaxConnections = (filteredConnections?.length ?? 0) >= 2;
             return (
               <div
@@ -311,7 +308,7 @@ export default function Connections() {
                 </div>
                 {/* Action buttons */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {(conn.permissionLevel === 'ADMIN' || conn.permissionLevel === 'WRITE') && (
+                  {(conn.permissionLevel === CONNECTION_ROLES.ADMIN || conn.permissionLevel === CONNECTION_ROLES.WRITE) && (
                     <button
                       onClick={() => openEdit(conn)}
                       title="Edit connection"
@@ -320,7 +317,7 @@ export default function Connections() {
                       <Pencil className="w-4 h-4" />
                     </button>
                   )}
-                  {conn.permissionLevel === 'ADMIN' && (
+                  {conn.permissionLevel === CONNECTION_ROLES.ADMIN && (
                     <button
                       onClick={() => setConnToDelete(conn)}
                       title="Delete connection"

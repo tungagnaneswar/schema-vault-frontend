@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { User as UserIcon, Mail, Shield, ShieldCheck, Key } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { Link } from 'react-router-dom';
+import { GLOBAL_ROLES } from '../constants/roles';
 
 export default function Profile() {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -38,7 +39,7 @@ export default function Profile() {
                 {user?.email}
               </span>
               <span className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/20 font-medium">
-                {user?.role === 'SUPER_ADMIN' ? <ShieldCheck className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
+                {user?.role === GLOBAL_ROLES.SUPER_ADMIN ? <ShieldCheck className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
                 {user?.role?.replace('_', ' ')}
               </span>
             </div>

@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../store/store';
 import { toast } from 'sonner';
 import { ProjectCardSkeleton } from '../components/Skeletons';
+import { GLOBAL_ROLES } from '../constants/roles';
 
 export default function Projects() {
   const queryClient = useQueryClient();
@@ -77,14 +78,12 @@ export default function Projects() {
       </PageHeader>
 
       <div className="flex justify-end">
-        {user?.role !== 'VIEWER' && (
-          <button
-            onClick={openCreate}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Add Project
-          </button>
-        )}
+        <button
+          onClick={openCreate}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Add Project
+        </button>
       </div>
 
       {isLoading ? (
@@ -116,7 +115,7 @@ export default function Projects() {
                   </div>
                   {/* Action buttons */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {(user?.role === 'SUPER_ADMIN' || user?.email === project.createdByEmail) && (
+                    {(user?.role === GLOBAL_ROLES.SUPER_ADMIN || user?.email === project.createdByEmail) && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -152,14 +151,12 @@ export default function Projects() {
               <p className="text-muted-foreground mb-6 max-w-sm">
                 Get started by creating your first project to organize and compare your database schemas.
               </p>
-              {user?.role !== 'VIEWER' && (
-                <button
-                  onClick={openCreate}
-                  className="bg-primary text-primary-foreground px-5 py-2.5 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm"
-                >
-                  <Plus className="w-4 h-4" /> Create First Project
-                </button>
-              )}
+              <button
+                onClick={openCreate}
+                className="bg-primary text-primary-foreground px-5 py-2.5 rounded-md font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4" /> Create First Project
+              </button>
             </div>
           )}
         </div>

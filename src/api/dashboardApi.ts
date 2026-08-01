@@ -5,6 +5,7 @@ export interface DashboardStats {
   schemasCompared: number;
   systemAlerts: number;
   activeUsers: number;
+  teams?: number;
   recentComparisons?: RecentComparison[];
 }
 
