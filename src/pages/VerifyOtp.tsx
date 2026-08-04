@@ -25,9 +25,8 @@ export default function VerifyOtp() {
 
   const mutation = useMutation({
     mutationFn: () => authApi.verifyOtp(email, otp),
-    onSuccess: (data) => {
-      // Store reset token in sessionStorage only — never localStorage
-      sessionStorage.setItem('reset_token', data.resetToken);
+    onSuccess: () => {
+      sessionStorage.setItem('otp_code', otp);
       navigate('/auth/reset-password');
     },
     onError: (err: any) => {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
+import { authApi } from '../api/authApi';
 import { type RootState } from '../store/store';
 import { LayoutDashboard, LogOut, ShieldCheck, Sun, Moon, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User } from 'lucide-react';
 import clsx from 'clsx';
@@ -45,8 +46,10 @@ export default function DashboardLayout() {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    authApi.logout().catch(() => {}).finally(() => {
+      dispatch(logout());
+      navigate('/login');
+    });
   };
 
   const baseNavItems = [

@@ -33,7 +33,8 @@ function getStrength(password: string): PasswordStrength {
 
 export default function ResetPassword() {
   const navigate = useNavigate();
-  const resetToken = sessionStorage.getItem('reset_token') ?? '';
+  const email = sessionStorage.getItem('otp_email') ?? '';
+  const otpCode = sessionStorage.getItem('otp_code') ?? '';
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -44,25 +45,26 @@ export default function ResetPassword() {
 
   const strength = getStrength(newPassword);
 
-  // Guard: if no reset token, redirect back
+  // Guard: if no email or OTP code, redirect back
   useEffect(() => {
-    if (!resetToken) {
+    if (!email || !otpCode) {
       navigate('/auth/forgot-password', { replace: true });
     }
-  }, [resetToken, navigate]);
+  }, [email, otpCode, navigate]);
 
   const mutation = useMutation({
-    mutationFn: () => authApi.resetPassword(resetToken, newPassword),
+    mutationFn: () => authApi.resetPassword(email, otpCode, newPassword),
     onSuccess: () => {
-      // Clean up session tokens
-      sessionStorage.removeItem('reset_token');
+      // Clean up session storage
+      sessionStorage.removeItem('otp_code');
       sessionStorage.removeItem('otp_email');
       setSuccess(true);
       // Redirect to login after brief success message
       setTimeout(() => navigate('/login', { replace: true }), 3000);
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || 'Failed to reset password. The link may have expired.');
+      const backendMsg = err.response?.data?.message || err.response?.data?.error;
+      setError(backendMsg || 'Failed to reset password. The OTP may have expired.');
     },
   });
 
