@@ -1,5 +1,4 @@
 import api from './axios';
-import { getCookie } from '../utils/cookie';
 
 export interface ForgotPasswordResponse {
   message: string;
@@ -39,8 +38,7 @@ export const authApi = {
   },
 
   logout: async (): Promise<{ message: string }> => {
-    const refreshToken = getCookie('refreshToken');
-    const response = await api.post('/auth/logout', { refreshToken });
+    const response = await api.post('/auth/logout');
     return response.data;
   },
 };

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { store } from '../store/store';
 import { logout } from '../store/authSlice';
-import { getCookie, setCookie } from '../utils/cookie';
+import { getCookie } from '../utils/cookie';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
 
@@ -15,7 +15,7 @@ const api = axios.create({
 
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (token: string) => void;
+  resolve: (token: string | null) => void;
   reject: (error: any) => void;
 }> = [];
 
@@ -23,7 +23,7 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((promise) => {
     if (error) {
       promise.reject(error);
-    } else if (token) {
+    } else {
       promise.resolve(token);
     }
   });
@@ -32,6 +32,7 @@ const processQueue = (error: any, token: string | null = null) => {
 
 api.interceptors.request.use(
   (config) => {
+    // If a token is available in JS cookies, attach it as a fallback header
     const token = getCookie('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -61,10 +62,7 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
+          .then(() => api(originalRequest))
           .catch((err) => Promise.reject(err));
       }
 
@@ -72,16 +70,8 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = getCookie('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        const response = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken }, { withCredentials: true });
-        const newAccessToken = response.data.accessToken;
-
-        setCookie('accessToken', newAccessToken);
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        const response = await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+        const newAccessToken = response.data?.accessToken;
 
         processQueue(null, newAccessToken);
         isRefreshing = false;
@@ -91,7 +81,6 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
 
-        // Cleanly synchronize Redux state and local storage
         store.dispatch(logout());
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';

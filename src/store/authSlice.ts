@@ -16,9 +16,11 @@ const getUserFromCookie = (): { email: string; role: string } | null => {
   }
 };
 
+const initialUser = getUserFromCookie();
+
 const initialState: AuthState = {
-  user: getUserFromCookie(),
-  isAuthenticated: !!getCookie('accessToken'),
+  user: initialUser,
+  isAuthenticated: !!initialUser,
 };
 
 const authSlice = createSlice({
@@ -27,19 +29,15 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: { email: string; role: string }; accessToken: string; refreshToken: string }>
+      action: PayloadAction<{ user: { email: string; role: string }; accessToken?: string; refreshToken?: string }>
     ) => {
       state.user = action.payload.user;
       state.isAuthenticated = true;
-      setCookie('accessToken', action.payload.accessToken);
-      setCookie('refreshToken', action.payload.refreshToken);
       setCookie('user', JSON.stringify(action.payload.user));
     },
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
-      removeCookie('accessToken');
-      removeCookie('refreshToken');
       removeCookie('user');
     },
   },
