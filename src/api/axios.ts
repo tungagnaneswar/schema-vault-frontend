@@ -1,11 +1,13 @@
 import axios from 'axios';
 import { store } from '../store/store';
 import { logout } from '../store/authSlice';
+import { getCookie, setCookie } from '../utils/cookie';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -30,7 +32,7 @@ const processQueue = (error: any, token: string | null = null) => {
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    const token = getCookie('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -70,15 +72,15 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = getCookie('refreshToken');
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
 
-        const response = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken });
+        const response = await axios.post(`${BASE_URL}/auth/refresh`, { refreshToken }, { withCredentials: true });
         const newAccessToken = response.data.accessToken;
 
-        localStorage.setItem('accessToken', newAccessToken);
+        setCookie('accessToken', newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         processQueue(null, newAccessToken);

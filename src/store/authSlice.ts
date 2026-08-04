@@ -1,13 +1,24 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { getCookie, setCookie, removeCookie } from '../utils/cookie';
 
 interface AuthState {
   user: { email: string; role: string } | null;
   isAuthenticated: boolean;
 }
 
+const getUserFromCookie = (): { email: string; role: string } | null => {
+  const userCookie = getCookie('user');
+  if (!userCookie) return null;
+  try {
+    return JSON.parse(userCookie);
+  } catch {
+    return null;
+  }
+};
+
 const initialState: AuthState = {
-  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string) : null,
-  isAuthenticated: !!localStorage.getItem('accessToken'),
+  user: getUserFromCookie(),
+  isAuthenticated: !!getCookie('accessToken'),
 };
 
 const authSlice = createSlice({
@@ -20,16 +31,16 @@ const authSlice = createSlice({
     ) => {
       state.user = action.payload.user;
       state.isAuthenticated = true;
-      localStorage.setItem('accessToken', action.payload.accessToken);
-      localStorage.setItem('refreshToken', action.payload.refreshToken);
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      setCookie('accessToken', action.payload.accessToken);
+      setCookie('refreshToken', action.payload.refreshToken);
+      setCookie('user', JSON.stringify(action.payload.user));
     },
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+      removeCookie('accessToken');
+      removeCookie('refreshToken');
+      removeCookie('user');
     },
   },
 });
