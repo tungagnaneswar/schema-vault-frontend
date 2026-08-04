@@ -1,26 +1,22 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { getCookie, setCookie, removeCookie } from '../utils/cookie';
 
-interface AuthState {
-  user: { email: string; role: string } | null;
-  isAuthenticated: boolean;
+export interface User {
+  email: string;
+  role: string;
 }
 
-const getUserFromCookie = (): { email: string; role: string } | null => {
-  const userCookie = getCookie('user');
-  if (!userCookie) return null;
-  try {
-    return JSON.parse(userCookie);
-  } catch {
-    return null;
-  }
-};
-
-const initialUser = getUserFromCookie();
+interface AuthState {
+  user: User | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  isInitializing: boolean;
+}
 
 const initialState: AuthState = {
-  user: initialUser,
-  isAuthenticated: !!initialUser,
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+  isInitializing: true,
 };
 
 const authSlice = createSlice({
@@ -29,19 +25,30 @@ const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: { email: string; role: string }; accessToken?: string; refreshToken?: string }>
+      action: PayloadAction<{ user: User; accessToken: string }>
     ) => {
       state.user = action.payload.user;
+      state.accessToken = action.payload.accessToken;
       state.isAuthenticated = true;
-      setCookie('user', JSON.stringify(action.payload.user));
+      state.isInitializing = false;
+    },
+    setAccessToken: (state, action: PayloadAction<string>) => {
+      state.accessToken = action.payload;
+      if (state.user) {
+        state.isAuthenticated = true;
+      }
+    },
+    finishInitializing: (state) => {
+      state.isInitializing = false;
     },
     logout: (state) => {
       state.user = null;
+      state.accessToken = null;
       state.isAuthenticated = false;
-      removeCookie('user');
+      state.isInitializing = false;
     },
   },
 });
 
-export const { setCredentials, logout } = authSlice.actions;
+export const { setCredentials, setAccessToken, finishInitializing, logout } = authSlice.actions;
 export default authSlice.reducer;

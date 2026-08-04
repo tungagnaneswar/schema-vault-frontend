@@ -1,7 +1,11 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { type RootState } from './store/store';
 import { GLOBAL_ROLES } from './constants/roles';
+import { setCredentials, finishInitializing } from './store/authSlice';
+import api from './api/axios';
+import { Loader2 } from 'lucide-react';
 
 // Layouts
 import AuthLayout from './layouts/AuthLayout';
@@ -26,7 +30,10 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from './components/ErrorFallback';
 
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const { isAuthenticated, isInitializing } = useSelector((state: RootState) => state.auth);
+  if (isInitializing) {
+    return null;
+  }
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -34,7 +41,10 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const { isAuthenticated, isInitializing } = useSelector((state: RootState) => state.auth);
+  if (isInitializing) {
+    return null;
+  }
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -58,6 +68,44 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+  const dispatch = useDispatch();
+  const isInitializing = useSelector((state: RootState) => state.auth.isInitializing);
+
+  useEffect(() => {
+    let isMounted = true;
+    const initAuth = async () => {
+      try {
+        const response = await api.post('/auth/refresh');
+        const { accessToken, email, role } = response.data || {};
+        if (isMounted && accessToken) {
+          dispatch(setCredentials({ user: { email, role }, accessToken }));
+        } else if (isMounted) {
+          dispatch(finishInitializing());
+        }
+      } catch {
+        if (isMounted) {
+          dispatch(finishInitializing());
+        }
+      }
+    };
+
+    initAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch]);
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <p className="text-sm text-slate-400 font-medium">Initializing session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <BrowserRouter>

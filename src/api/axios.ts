@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { store } from '../store/store';
-import { logout } from '../store/authSlice';
-import { getCookie } from '../utils/cookie';
+import { setCredentials, logout } from '../store/authSlice';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080/api';
 
@@ -32,8 +31,7 @@ const processQueue = (error: any, token: string | null = null) => {
 
 api.interceptors.request.use(
   (config) => {
-    // If a token is available in JS cookies, attach it as a fallback header
-    const token = getCookie('accessToken');
+    const token = store.getState().auth.accessToken;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -62,7 +60,12 @@ api.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then(() => api(originalRequest))
+          .then((token) => {
+            if (token && originalRequest.headers) {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+            }
+            return api(originalRequest);
+          })
           .catch((err) => Promise.reject(err));
       }
 
@@ -71,18 +74,25 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
-        const newAccessToken = response.data?.accessToken;
+        const { accessToken, email, role } = response.data || {};
 
-        processQueue(null, newAccessToken);
-        isRefreshing = false;
-
-        return api(originalRequest);
+        if (accessToken) {
+          store.dispatch(setCredentials({ user: { email, role }, accessToken }));
+          processQueue(null, accessToken);
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          }
+          isRefreshing = false;
+          return api(originalRequest);
+        } else {
+          throw new Error('No access token in refresh response');
+        }
       } catch (refreshError) {
         processQueue(refreshError, null);
         isRefreshing = false;
 
         store.dispatch(logout());
-        if (window.location.pathname !== '/login') {
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);
