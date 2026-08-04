@@ -25,7 +25,6 @@ export default function Login() {
       dispatch(setCredentials({
         user: { email: data.email, role: data.role },
         accessToken: data.accessToken,
-        refreshToken: data.refreshToken
       }));
       navigate('/dashboard');
     },
