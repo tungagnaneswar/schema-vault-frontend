@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getCompareJobs } from '../api/compareApi';
+import { getCompareJobs, parseTags } from '../api/compareApi';
 import PageHeader from '../components/PageHeader';
 import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Loader2, User as UserIcon, Timer, Tag } from 'lucide-react';
 import { getProjects } from '../api/projectsApi';
@@ -54,7 +54,7 @@ export default function CompareHistory() {
         ) : (
           <div className="divide-y">
             {jobsData?.content?.map((job: any) => {
-              const tags = job.tags ? JSON.parse(job.tags) : [];
+              const tags = parseTags(job.tags);
               return (
                 <div key={job.id} onClick={() => navigate(`/projects/${projectId}/compare/${job.id}`)} className="p-5 flex items-center justify-between hover:bg-muted/30 transition-colors cursor-pointer">
                   <div className="flex items-start gap-4">

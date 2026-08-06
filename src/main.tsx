@@ -8,10 +8,9 @@ import App from './App.tsx'
 
 const queryClient = new QueryClient()
 
-// Apply theme on load
-if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+// Apply theme on load (default is light theme)
+if (localStorage.getItem('theme') === 'dark') {
   document.documentElement.classList.add('dark');
-  localStorage.setItem('theme', 'dark');
 } else {
   document.documentElement.classList.remove('dark');
   localStorage.setItem('theme', 'light');

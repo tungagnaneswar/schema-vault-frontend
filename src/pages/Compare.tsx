@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../api/axios';
-import { createSnapshot, startCompareJob, getCompareJob, type CompareJob as CompareJobType } from '../api/compareApi';
+import { createSnapshot, startCompareJob, getCompareJob, parseTags, type CompareJob as CompareJobType } from '../api/compareApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRightLeft, GitCompare, CheckCircle2, AlertTriangle, XCircle,
@@ -757,11 +757,11 @@ export default function Compare() {
                 <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Duration</p>
                 <p className="text-sm font-medium">{formatDuration(jobData?.durationMs || null)}</p>
              </div>
-             {jobData?.tags && jobData.tags !== '[]' && (
+             {parseTags(jobData?.tags).length > 0 && (
                <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">Tags</p>
                   <div className="flex gap-1 flex-wrap mt-0.5">
-                     {JSON.parse(jobData.tags as unknown as string).map((tag: string, i: number) => (
+                     {parseTags(jobData?.tags).map((tag: string, i: number) => (
                         <span key={i} className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] rounded-full font-medium">{tag}</span>
                      ))}
                   </div>

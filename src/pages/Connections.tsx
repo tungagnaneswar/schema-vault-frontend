@@ -4,11 +4,11 @@ import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { motion } from 'framer-motion';
-import { Plus, Database, Trash2, ShieldCheck, Loader2, Pencil, X, Folder, ArrowLeft, GitCompare, Clock, CheckCircle2, AlertCircle, User as UserIcon, Timer, Tag } from 'lucide-react';
+import { Plus, Database, Trash2, ShieldCheck, Loader2, Pencil, X, Folder, ArrowLeft, GitCompare, Clock, CheckCircle2, AlertCircle, User as UserIcon, Timer, Tag, Layers, Sparkles } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { getProjects, type Project } from '../api/projectsApi';
-import { getEnvironmentsByProject, type Environment } from '../api/environmentsApi';
-import { getCompareJobs } from '../api/compareApi';
+import { getEnvironmentsByProject, createEnvironment, deleteEnvironment, type Environment } from '../api/environmentsApi';
+import { getCompareJobs, parseTags } from '../api/compareApi';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { ConnectionCardSkeleton } from '../components/Skeletons';
@@ -63,11 +63,15 @@ export default function Connections() {
   const [connToDelete, setConnToDelete] = useState<DbConnection | null>(null);
   const [formData, setFormData] = useState(emptyForm);
   const [historyPage, setHistoryPage] = useState(0);
+  const [isEnvModalOpen, setIsEnvModalOpen] = useState(false);
+  const [newEnvName, setNewEnvName] = useState('');
 
   // Redirect to projects if no projectId
   if (!projectIdParam) {
     return <Navigate to="/projects" replace />;
   }
+
+  const projectIdNum = parseInt(projectIdParam);
 
   const { data: connections, isLoading } = useQuery<DbConnection[]>({
     queryKey: ['connections'],
@@ -84,8 +88,55 @@ export default function Connections() {
 
   const { data: environments } = useQuery<Environment[]>({
     queryKey: ['environments', projectIdParam],
-    queryFn: () => getEnvironmentsByProject(parseInt(projectIdParam!)),
+    queryFn: () => getEnvironmentsByProject(projectIdNum),
     enabled: !!projectIdParam
+  });
+
+  const createEnvMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const seq = (environments?.length || 0) + 1;
+      return await createEnvironment({ name, projectId: projectIdNum, sequence: seq });
+    },
+    onSuccess: (createdEnv) => {
+      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam] });
+      setNewEnvName('');
+      toast.success(`Environment '${createdEnv.name}' created`);
+      if (formData.environmentId === 0) {
+        setFormData(prev => ({ ...prev, environmentId: createdEnv.id }));
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to create environment');
+    }
+  });
+
+  const deleteEnvMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await deleteEnvironment(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam] });
+      toast.success('Environment deleted');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to delete environment');
+    }
+  });
+
+  const createDefaultEnvsMutation = useMutation({
+    mutationFn: async () => {
+      const defaults = ['Development', 'QA', 'Staging', 'Production'];
+      for (let i = 0; i < defaults.length; i++) {
+        await createEnvironment({ name: defaults[i], projectId: projectIdNum, sequence: i + 1 });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam] });
+      toast.success('Default environments created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to create default environments');
+    }
   });
 
   const { data: jobsData, isLoading: isLoadingJobs } = useQuery({
@@ -211,7 +262,15 @@ export default function Connections() {
           Back to Projects
         </button>
         <div className="flex items-center gap-3">
-        {/* Compare Schemas — always visible; disabled with tooltip until 2 connections exist */}
+          {/* Manage Environments */}
+          <button
+            onClick={() => setIsEnvModalOpen(true)}
+            className="px-4 py-2 border rounded-md font-medium text-sm hover:bg-muted transition-colors flex items-center gap-2"
+          >
+            <Layers className="w-4 h-4" /> Manage Environments
+          </button>
+
+          {/* Compare Schemas — always visible; disabled with tooltip until 2 connections exist */}
         {(() => {
           const connCount = filteredConnections?.length ?? 0;
           const canCompare = connCount >= 2;
@@ -269,6 +328,37 @@ export default function Connections() {
           })()}
         </div>
       </div>
+
+      {environments && environments.length === 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/20 text-amber-600 rounded-lg shrink-0">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-sm text-foreground">No Environments Found</h4>
+              <p className="text-xs text-muted-foreground">This project has no database environments configured. Add environments to start connecting databases.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => createDefaultEnvsMutation.mutate()}
+              disabled={createDefaultEnvsMutation.isPending}
+              className="px-3.5 py-2 bg-primary text-primary-foreground text-xs font-medium rounded-md hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+            >
+              {createDefaultEnvsMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              Create Default Environments
+            </button>
+            <button
+              onClick={() => setIsEnvModalOpen(true)}
+              className="px-3.5 py-2 border text-xs font-medium rounded-md hover:bg-muted transition-colors flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Custom
+            </button>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -366,7 +456,7 @@ export default function Connections() {
           ) : (
             <div className="divide-y">
               {jobsData?.content?.map((job: any) => {
-                const tags = job.tags ? JSON.parse(job.tags) : [];
+                const tags = parseTags(job.tags);
                 return (
                   <div key={job.id} onClick={() => navigate(`/projects/${projectIdParam}/compare/${job.id}`)} className="p-5 flex items-center justify-between hover:bg-muted/30 transition-colors cursor-pointer">
                     <div className="flex items-start gap-4">
@@ -503,18 +593,28 @@ export default function Connections() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-medium">Environment <span className="text-red-500">*</span></label>
-                  <select 
-                    autoComplete="do-not-autofill" 
-                    value={formData.environmentId} 
-                    onChange={e => setFormData({ ...formData, environmentId: parseInt(e.target.value) })} 
-                    className="w-full px-3 py-2 border rounded-md text-sm bg-background"
-                    required
-                  >
-                    <option value={0} disabled>Select an environment...</option>
-                    {environments?.map(env => (
-                      <option key={env.id} value={env.id}>{env.name}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <select 
+                      autoComplete="do-not-autofill" 
+                      value={formData.environmentId} 
+                      onChange={e => setFormData({ ...formData, environmentId: parseInt(e.target.value) })} 
+                      className="w-full px-3 py-2 border rounded-md text-sm bg-background"
+                      required
+                    >
+                      <option value={0} disabled>Select an environment...</option>
+                      {environments?.map(env => (
+                        <option key={env.id} value={env.id}>{env.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setIsEnvModalOpen(true)}
+                      title="Add new environment"
+                      className="p-2 border rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 <div className="col-span-2 space-y-1">
                   <label className="text-xs font-medium">Host <span className="text-red-500">*</span></label>
@@ -595,6 +695,100 @@ export default function Connections() {
                   {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Delete
                 </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>,
+        document.body
+      )}
+
+      {/* Manage Environments Modal */}
+      {isEnvModalOpen && createPortal(
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] flex justify-center items-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card border shadow-xl rounded-xl w-full max-w-md overflow-hidden"
+          >
+            <div className="px-6 py-4 border-b flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Manage Environments</h3>
+              </div>
+              <button onClick={() => setIsEnvModalOpen(false)} className="text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Add New Environment */}
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!newEnvName.trim()) return;
+                  createEnvMutation.mutate(newEnvName.trim());
+                }}
+                className="space-y-2"
+              >
+                <label className="text-xs font-medium">Add New Environment</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    required
+                    value={newEnvName}
+                    onChange={(e) => setNewEnvName(e.target.value)}
+                    placeholder="e.g. UAT, PreProd, Staging"
+                    className="flex-1 px-3 py-2 border rounded-md text-sm bg-background"
+                  />
+                  <button
+                    type="submit"
+                    disabled={createEnvMutation.isPending || !newEnvName.trim()}
+                    className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1.5 shrink-0 transition-colors"
+                  >
+                    {createEnvMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Add
+                  </button>
+                </div>
+              </form>
+
+              {/* Environment List */}
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Existing Environments ({environments?.length ?? 0})</label>
+                {(!environments || environments.length === 0) ? (
+                  <div className="text-center py-6 border rounded-lg bg-muted/20 text-xs text-muted-foreground">
+                    No environments created yet.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {environments.map((env) => {
+                      const connCount = connections?.filter(c => c.environmentId === env.id).length || 0;
+                      return (
+                        <div key={env.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/10">
+                          <div className="flex items-center gap-2.5">
+                            <span className={clsx(
+                              "text-xs font-semibold px-2 py-0.5 rounded-md",
+                              ENV_COLORS[env.name.toUpperCase()] || "bg-muted text-muted-foreground"
+                            )}>
+                              {env.name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {connCount} {connCount === 1 ? 'connection' : 'connections'}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={connCount > 0 || deleteEnvMutation.isPending}
+                            title={connCount > 0 ? "Cannot delete environment with active connections" : "Delete environment"}
+                            onClick={() => deleteEnvMutation.mutate(env.id)}
+                            className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

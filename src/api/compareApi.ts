@@ -20,9 +20,28 @@ export interface CompareJob {
     createdByEmail: string;
     durationMs: number | null;
     reason: string | null;
-    tags: string | null;
+    tags: string[] | string | null;
     summaryStatistics: any | null;
 }
+
+export const parseTags = (tagsInput: any): string[] => {
+    if (!tagsInput) return [];
+    if (Array.isArray(tagsInput)) return tagsInput;
+    if (typeof tagsInput === 'string') {
+        const trimmed = tagsInput.trim();
+        if (!trimmed || trimmed === '[]') return [];
+        if (trimmed.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) return parsed;
+            } catch {
+                // Fallback to comma separation
+            }
+        }
+        return trimmed.split(',').map(t => t.trim()).filter(Boolean);
+    }
+    return [];
+};
 
 export const createSnapshot = async (connectionId: number): Promise<Snapshot> => {
     const response = await api.post(`/snapshots/connection/${connectionId}`);
