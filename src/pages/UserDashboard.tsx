@@ -8,7 +8,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { GLOBAL_ROLES } from '../constants/roles';
 
-export default function AdminDashboard() {
+export default function UserDashboard() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { data, isLoading } = useQuery({
     queryKey: ['dashboardStats'],
@@ -42,31 +42,31 @@ export default function AdminDashboard() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, i) => {
-            const Icon = stat.icon;
-            return (
-              <motion.div
-                key={stat.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1, duration: 0.4 }}
-                className="p-6 bg-card border rounded-xl shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{stat.name}</p>
-                    <p className="text-3xl font-bold mt-2">{stat.value}</p>
+            {stats.map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div
+                  key={stat.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.4 }}
+                  className="p-6 bg-card border rounded-xl shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{stat.name}</p>
+                      <p className="text-3xl font-bold mt-2">{stat.value}</p>
+                    </div>
+                    <div className={`p-3 rounded-full ${stat.bg}`}>
+                      <Icon className={`w-6 h-6 ${stat.color}`} />
+                    </div>
                   </div>
-                  <div className={`p-3 rounded-full ${stat.bg}`}>
-                    <Icon className={`w-6 h-6 ${stat.color}`} />
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
+                </motion.div>
+              );
+            })}
           </div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.4 }}
@@ -93,11 +93,10 @@ export default function AdminDashboard() {
                           <td className="py-3 px-4">{comp.sourceEnvironmentName}</td>
                           <td className="py-3 px-4">{comp.targetEnvironmentName}</td>
                           <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              comp.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
-                              comp.status === 'FAILED' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' :
-                              'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
-                            }`}>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${comp.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                                comp.status === 'FAILED' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' :
+                                  'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                              }`}>
                               {comp.status}
                             </span>
                           </td>

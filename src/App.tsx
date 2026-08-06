@@ -5,9 +5,7 @@ import { type RootState } from './store/store';
 import { GLOBAL_ROLES } from './constants/roles';
 import { setCredentials, finishInitializing } from './store/authSlice';
 import api from './api/axios';
-import { Loader2 } from 'lucide-react';
 
-// Layouts
 import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 
@@ -17,17 +15,18 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import VerifyOtp from './pages/VerifyOtp';
 import ResetPassword from './pages/ResetPassword';
-import AdminDashboard from './pages/AdminDashboard';
+import UserDashboard from './pages/UserDashboard';
 import Projects from './pages/Projects';
 import Connections from './pages/Connections';
 import Compare from './pages/Compare';
 import CompareHistory from './pages/CompareHistory';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
-import Teams from './pages/Teams';
+import TeamManagement from './pages/TeamManagement';
 import Profile from './pages/Profile';
 import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from './components/ErrorFallback';
+import SessionLoader from './components/SessionLoader';
 
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isInitializing } = useSelector((state: RootState) => state.auth);
@@ -96,14 +95,7 @@ function App() {
   }, [dispatch]);
 
   if (isInitializing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-          <p className="text-sm text-slate-400 font-medium">Initializing session...</p>
-        </div>
-      </div>
-    );
+    return <SessionLoader />;
   }
 
   return (
@@ -122,7 +114,7 @@ function App() {
           {/* Dashboard Routes */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/admin-dashboard" element={<Navigate to="/dashboard" replace />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/projects" element={<Projects />} />
@@ -132,7 +124,7 @@ function App() {
             <Route path="/projects/:projectId/compare-history" element={<CompareHistory />} />
             <Route path="/connections" element={<Navigate to="/projects" replace />} />
             <Route path="/compare" element={<Navigate to="/projects" replace />} />
-            
+
             {/* Super Admin Dashboard Route */}
             <Route
               path="/super-admin-dashboard"
@@ -144,16 +136,16 @@ function App() {
             />
             <Route path="/super-admin" element={<Navigate to="/super-admin-dashboard" replace />} />
 
-            {/* Teams Route */}
+            {/* Team Management Route */}
             <Route
-              path="/teams"
+              path="/team-management"
               element={
                 <AdminRoute>
-                  <Teams />
+                  <TeamManagement />
                 </AdminRoute>
               }
             />
-            <Route path="/admin" element={<Navigate to="/teams" replace />} />
+            <Route path="/admin" element={<Navigate to="/team-management" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>

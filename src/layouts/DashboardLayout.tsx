@@ -58,11 +58,11 @@ export default function DashboardLayout() {
   ];
 
   const adminNavItems = user?.role === GLOBAL_ROLES.SUPER_ADMIN || user?.role === GLOBAL_ROLES.ADMIN
-    ? [{ name: 'Teams', path: '/teams', icon: Users }]
+    ? [{ name: 'Team Management', path: '/team-management', icon: Users }]
     : [];
 
   const superAdminNavItems = user?.role === GLOBAL_ROLES.SUPER_ADMIN
-    ? [{ name: 'Super Admin Dashboard', path: '/super-admin-dashboard', icon: ShieldCheck }]
+    ? [{ name: 'Super Admin', path: '/super-admin-dashboard', icon: ShieldCheck }]
     : [];
 
   const navItems = [...baseNavItems, ...adminNavItems, ...superAdminNavItems];

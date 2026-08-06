@@ -1,6 +1,7 @@
 export const GLOBAL_ROLES = {
   SUPER_ADMIN: 'SUPER_ADMIN',
   ADMIN: 'ADMIN',
+  USER: 'USER',
 } as const;
 
 export type GlobalRoleType = typeof GLOBAL_ROLES[keyof typeof GLOBAL_ROLES];

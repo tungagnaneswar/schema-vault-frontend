@@ -5,7 +5,7 @@ import api from '../api/axios';
 import { createPortal } from 'react-dom';
 import { TEAM_ROLES, CONNECTION_ROLES } from '../constants/roles';
 
-export default function Teams() {
+export default function TeamManagement() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   
@@ -265,7 +265,7 @@ export default function Teams() {
         <div className="p-4 border-b flex justify-between items-center bg-muted/50">
           <h3 className="font-semibold flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />
-            Teams
+            Team Management
           </h3>
           <button
             onClick={() => setShowCreateModal(true)}
