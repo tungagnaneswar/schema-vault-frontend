@@ -16,7 +16,7 @@ import PageHeader from '../components/PageHeader';
 import { getProjects, type Project } from '../api/projectsApi';
 
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// Types
 
 interface Connection {
   id: number;
@@ -37,12 +37,24 @@ interface ColumnInfo {
   numericScale: number | null;
 }
 
+interface PropertyDiff {
+  property: string;
+  sourceValue: string | null;
+  targetValue: string | null;
+  status: string;
+  severity: string;
+  explanation: string | null;
+}
+
 interface ColumnDiff {
   columnName: string;
   status: string;
+  migrationOperation: string;
+  severity: string;
   sourceColumn: ColumnInfo | null;
   targetColumn: ColumnInfo | null;
   mismatchDetails: string[];
+  propertyDiffs: PropertyDiff[];
 }
 
 interface PrimaryKeyDiff {
@@ -62,12 +74,33 @@ interface ObjectDiff {
 interface TableDiff {
   tableName: string;
   status: string;
+  migrationOperation: string;
+  severity: string;
+  changeCount: number;
+  columnsSourceOnly: number;
+  columnsTargetOnly: number;
+  columnsModified: number;
   columnDiffs: ColumnDiff[];
   primaryKeyDiff: PrimaryKeyDiff | null;
   constraintDiffs: ObjectDiff[];
   foreignKeyDiffs: ObjectDiff[];
   indexDiffs: ObjectDiff[];
   triggerDiffs: ObjectDiff[];
+}
+
+interface ComparisonSummary {
+  tablesChecked: number;
+  tablesIdentical: number;
+  tablesSourceOnly: number;
+  tablesTargetOnly: number;
+  tablesModified: number;
+  columnsSourceOnly: number;
+  columnsTargetOnly: number;
+  columnsModified: number;
+  safeChanges: number;
+  reviewChanges: number;
+  destructiveChanges: number;
+  overallRisk: string;
 }
 
 interface CompareResult {
@@ -79,9 +112,10 @@ interface CompareResult {
   sequenceDiffs: ObjectDiff[];
   typeDiffs: ObjectDiff[];
   viewDiffs: ObjectDiff[];
+  summary: ComparisonSummary;
 }
 
-// ─── Status styling ───────────────────────────────────────────────────────────
+// Status styling
 
 const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
   IDENTICAL:           { icon: CheckCircle2,  color: 'text-emerald-500', bg: 'bg-emerald-500/10', label: 'Identical' },
@@ -94,7 +128,7 @@ const STATUS_CONFIG: Record<string, { icon: any; color: string; bg: string; labe
 const getStatus = (status: string) =>
   STATUS_CONFIG[status] ?? { icon: AlertTriangle, color: 'text-muted-foreground', bg: 'bg-muted', label: 'Unknown' };
 
-// ─── Tabs ─────────────────────────────────────────────────────────────────────
+// Tabs
 
 type TabKey = 'tables' | 'indexes' | 'triggers' | 'functions' | 'procedures' | 'sequences' | 'types' | 'views' | 'constraints';
 
@@ -110,7 +144,7 @@ const TABS: { key: TabKey; label: string; icon: any }[] = [
   { key: 'constraints', label: 'Constraints', icon: ShieldAlert },
 ];
 
-// ─── Progress Stepper (imported component + types) ──────────────────────────
+// Progress Stepper (imported component + types)
 
 import CompareProgressStepper, { type StepStatus, type ProgressStep } from '../components/CompareProgressStepper';
 
@@ -122,7 +156,7 @@ const INITIAL_STEPS: ProgressStep[] = [
   { id: 'finalize',  label: 'Preparing Results',         description: 'Almost there! Generating comparison report...',  icon: Sparkles,     status: 'pending' },
 ];
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// Sub-components
 
 function StatusBadge({ status }: { status: string }) {
   const conf = getStatus(status);
@@ -149,7 +183,35 @@ function ColBadge({ col }: { col: ColumnInfo | null }) {
   );
 }
 
-function MismatchDetails({ details }: { details: string[] }) {
+function MismatchDetails({ details, properties }: { details: string[], properties?: PropertyDiff[] }) {
+  if (properties && properties.length > 0) {
+    return (
+      <div className="col-span-full px-5 pb-3">
+        <div className="bg-muted/10 border rounded-lg overflow-hidden">
+          <div className="grid grid-cols-4 gap-4 px-4 py-2 bg-muted/20 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b">
+            <span>Property</span>
+            <span>Source</span>
+            <span>Target</span>
+            <span>Risk</span>
+          </div>
+          <div className="divide-y divide-border/50">
+            {properties.map((p, i) => {
+              const sevColor = p.severity === 'DESTRUCTIVE' ? 'text-rose-500 bg-rose-500/10' : p.severity === 'REVIEW' ? 'text-amber-500 bg-amber-500/10' : 'text-emerald-500 bg-emerald-500/10';
+              return (
+                <div key={i} className="grid grid-cols-4 gap-4 px-4 py-2.5 items-center text-xs">
+                  <span className="font-mono font-medium">{p.property}</span>
+                  <span className="font-mono text-muted-foreground truncate" title={p.sourceValue ?? ''}>{p.sourceValue ?? <span className="italic opacity-50">null</span>}</span>
+                  <span className="font-mono truncate" title={p.targetValue ?? ''}>{p.targetValue ?? <span className="italic opacity-50">null</span>}</span>
+                  <span className={clsx('w-max px-2 py-0.5 rounded-full font-medium text-[10px]', sevColor)}>{p.severity}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!details || details.length === 0) return null;
   return (
     <div className="col-span-full pl-8 pr-4 pb-2">
@@ -179,7 +241,7 @@ function PresenceIndicator({ status, side }: { status: string; side: 'source' | 
   );
 }
 
-// ─── Table sub-section component ──────────────────────────────────────────────
+// Table sub-section component
 
 function SubSection({ title, icon: Icon, diffs }: { title: string; icon: any; diffs: ObjectDiff[] }) {
   const nonIdentical = diffs.filter(d => d.status !== 'IDENTICAL');
@@ -573,7 +635,7 @@ export default function Compare() {
 
   const result = (jobData?.status === 'COMPLETED' ? jobData.resultData : null) as CompareResult | null;
 
-  // ─── Extract nested table diffs for top-level tabs ────────────────────────
+  // Extract nested table diffs for top-level tabs
   
   const extractedDiffs = useMemo(() => {
     if (!result) return { indexes: [], triggers: [], constraints: [] };
@@ -590,7 +652,7 @@ export default function Compare() {
     return { indexes, triggers, constraints };
   }, [result]);
 
-  // ─── Stats ────────────────────────────────────────────────────────────────
+  // Stats
 
   const stats = useMemo(() => {
     if (!result) return null;
@@ -618,13 +680,13 @@ export default function Compare() {
 
   const currentStats = stats ? stats[activeTab] : null;
 
-  // ─── Filtered diffs ───────────────────────────────────────────────────────
+  // Filtered diffs
 
   const filteredTableDiffs = result?.tableDiffs.filter(td =>
     showDiffOnly ? td.status !== 'IDENTICAL' : true
   ) ?? [];
 
-  // ─── Tab badge counts ─────────────────────────────────────────────────────
+  // Tab badge counts
 
   const tabBadgeCounts = useMemo(() => {
     if (!result) return {};
@@ -711,7 +773,7 @@ export default function Compare() {
         </div>
       )}
 
-      {/* ─── Selector card / Metadata block ────────────────────────────── */}
+      {/* Selector card / Metadata block */}
       {jobIdParam ? (
         <div className="bg-card border rounded-xl p-6 shadow-sm mb-8 space-y-4">
           <div className="flex items-center justify-between pb-4 border-b border-border/50">
@@ -892,14 +954,14 @@ export default function Compare() {
         </div>
       )}
 
-      {/* ─── Progress Stepper ────────────────────────────────────────── */}
+      {/* Progress Stepper */}
       <AnimatePresence>
         {showStepper && (
           <CompareProgressStepper steps={progressSteps} />
         )}
       </AnimatePresence>
 
-      {/* ─── Results ────────────────────────────────────────────────────── */}
+      {/* Results */}
       {jobData?.status === 'FAILED' && (
         <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-6 flex flex-col items-center justify-center text-rose-500">
           <AlertCircle className="w-10 h-10 mb-3" />
@@ -911,7 +973,46 @@ export default function Compare() {
       {result && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
 
-          {/* ─── Tab navigation ──────────────────────────────────────── */}
+          {/* Schema Summary */}
+          <div className="bg-card border rounded-xl p-6 shadow-sm flex flex-col md:flex-row gap-6 items-center">
+            <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Tables</span>
+                <span className="text-2xl font-bold">{result.summary?.tablesChecked ?? '-'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Identical</span>
+                <span className="text-2xl font-bold text-emerald-500">{result.summary?.tablesIdentical ?? '-'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Missing</span>
+                <span className="text-2xl font-bold text-amber-500">{(result.summary?.tablesSourceOnly ?? 0) + (result.summary?.tablesTargetOnly ?? 0)}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Modified</span>
+                <span className="text-2xl font-bold text-violet-500">{result.summary?.tablesModified ?? '-'}</span>
+              </div>
+            </div>
+            
+            <div className={clsx('md:w-64 w-full rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-inner border', 
+              result.summary?.overallRisk === 'DESTRUCTIVE' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' :
+              result.summary?.overallRisk === 'REVIEW' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' :
+              'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'
+            )}>
+              <span className="text-[10px] uppercase font-bold tracking-widest opacity-80 mb-1">Overall Risk Level</span>
+              <div className="flex items-center gap-2">
+                {result.summary?.overallRisk === 'DESTRUCTIVE' ? <AlertTriangle className="w-5 h-5" /> :
+                 result.summary?.overallRisk === 'REVIEW' ? <AlertCircle className="w-5 h-5" /> :
+                 <CheckCircle2 className="w-5 h-5" />}
+                <span className="text-xl font-black tracking-tight">{result.summary?.overallRisk}</span>
+              </div>
+              {(result.summary?.destructiveChanges ?? 0) > 0 && (
+                <span className="text-xs font-semibold mt-2">{result.summary.destructiveChanges} Destructive Changes</span>
+              )}
+            </div>
+          </div>
+
+          {/* Tab navigation */}
           <div className="flex gap-1 bg-card border rounded-xl p-1.5 shadow-sm">
             {TABS.map(tab => {
               const TabIcon = tab.icon;
@@ -943,7 +1044,7 @@ export default function Compare() {
             })}
           </div>
 
-          {/* ─── Summary stats ───────────────────────────────────────── */}
+          {/* Summary stats */}
           {currentStats && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {[
@@ -961,7 +1062,7 @@ export default function Compare() {
             </div>
           )}
 
-          {/* ─── Toolbar ─────────────────────────────────────────────── */}
+          {/* Toolbar */}
           <div className="flex justify-between items-center bg-card border px-4 py-3 rounded-xl shadow-sm">
             <label className="flex items-center gap-2 text-sm font-medium cursor-pointer select-none">
               <input
@@ -977,7 +1078,7 @@ export default function Compare() {
             </button>
           </div>
 
-          {/* ─── Tab content ─────────────────────────────────────────── */}
+          {/* Tab content */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -1181,20 +1282,23 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  className="border-t px-5 py-4 text-sm text-muted-foreground bg-muted/5"
+                  className={clsx(
+                    "border-t px-5 py-3 text-sm font-medium",
+                    tableDiff.status === 'MISSING_IN_SOURCE' ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600"
+                  )}
                 >
                   Table exists only in {tableDiff.status === 'MISSING_IN_TARGET' ? 'source' : 'target'} database.
                 </motion.div>
               )}
 
-              {isExpanded && tableDiff.status !== 'MISSING_IN_SOURCE' && tableDiff.status !== 'MISSING_IN_TARGET' && (
+              {isExpanded && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  {/* ── Columns section ── */}
+                  {/* Columns section */}
                   {colDiffs.length > 0 && (
                     <div className="border-t border-border/50 p-6 bg-muted/5">
                       {(() => {
@@ -1204,71 +1308,90 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                         const missingInSourceCols: ColumnDiff[] = [];
                         const mismatchCols: ColumnDiff[] = [];
 
-                        colDiffs.forEach(colDiff => {
-                          if (colDiff.status === 'MISSING_IN_TARGET' || colDiff.status === 'MISSING_IN_SOURCE') {
-                            const colName = colDiff.columnName;
-                            const type = colDiff.sourceColumn?.type || colDiff.targetColumn?.type || 'varchar';
-                            safeSqls.push(`ALTER TABLE ${tableDiff.tableName} ADD COLUMN IF NOT EXISTS ${colName} ${type};`);
-                            destructiveSqls.push(`ALTER TABLE ${tableDiff.tableName} DROP COLUMN IF EXISTS ${colName};`);
-                            
-                            if (colDiff.status === 'MISSING_IN_TARGET') {
-                              missingInTargetCols.push(colDiff);
+                        if (tableDiff.status === 'MISSING_IN_TARGET') {
+                          safeSqls.push(`CREATE TABLE ${tableDiff.tableName} (`);
+                          const colDefs = colDiffs.map(c => {
+                            const col = c.sourceColumn;
+                            if (!col) return `    ${c.columnName} varchar`;
+                            return `    ${col.name} ${col.type}${!col.isNullable ? ' NOT NULL' : ''}${col.defaultValue ? ` DEFAULT ${col.defaultValue}` : ''}`;
+                          });
+                          safeSqls.push(colDefs.join(',\n'));
+                          safeSqls.push(`);`);
+                          colDiffs.forEach(c => missingInTargetCols.push(c));
+                        } else if (tableDiff.status === 'MISSING_IN_SOURCE') {
+                          destructiveSqls.push(`DROP TABLE IF EXISTS ${tableDiff.tableName} CASCADE;`);
+                          colDiffs.forEach(c => missingInSourceCols.push(c));
+                        } else {
+                          colDiffs.forEach(colDiff => {
+                            if (colDiff.status === 'MISSING_IN_TARGET' || colDiff.status === 'MISSING_IN_SOURCE') {
+                              const colName = colDiff.columnName;
+                              const type = colDiff.sourceColumn?.type || colDiff.targetColumn?.type || 'varchar';
+                              safeSqls.push(`ALTER TABLE ${tableDiff.tableName} ADD COLUMN IF NOT EXISTS ${colName} ${type};`);
+                              destructiveSqls.push(`ALTER TABLE ${tableDiff.tableName} DROP COLUMN IF EXISTS ${colName};`);
+                              
+                              if (colDiff.status === 'MISSING_IN_TARGET') {
+                                missingInTargetCols.push(colDiff);
+                              } else {
+                                missingInSourceCols.push(colDiff);
+                              }
                             } else {
-                              missingInSourceCols.push(colDiff);
+                              mismatchCols.push(colDiff);
                             }
-                          } else {
-                            mismatchCols.push(colDiff);
-                          }
-                        });
+                          });
+                        }
 
-                        const hasSql = safeSqls.length > 0;
+                        const hasContent = safeSqls.length > 0 || destructiveSqls.length > 0 || missingInTargetCols.length > 0 || missingInSourceCols.length > 0 || mismatchCols.length > 0;
 
                         return (
                           <div className="space-y-6">
-                            {hasSql && (
+                            {hasContent && (
                               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Left Side: SQL Boxes */}
                                 <div className="space-y-4">
                                   {/* Safe SQL Box */}
-                                  <div className="border border-blue-500/20 bg-card rounded-lg overflow-hidden shadow-sm">
-                                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-blue-500/10 bg-blue-500/5">
-                                      <div className="flex items-center gap-2">
-                                        <ShieldCheck className="w-4 h-4 text-blue-500" />
-                                        <span className="text-sm font-semibold text-blue-500">Sync Alter Table SQL (Safe)</span>
+                                  {safeSqls.length > 0 && (
+                                    <div className="border border-blue-500/20 bg-card rounded-lg overflow-hidden shadow-sm">
+                                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-blue-500/10 bg-blue-500/5">
+                                        <div className="flex items-center gap-2">
+                                          <ShieldCheck className="w-4 h-4 text-blue-500" />
+                                          <span className="text-sm font-semibold text-blue-500">Sync SQL (Safe)</span>
+                                        </div>
+                                        <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50 border border-transparent hover:border-border">
+                                          <Copy className="w-3 h-3" /> Copy
+                                        </button>
                                       </div>
-                                      <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50 border border-transparent hover:border-border">
-                                        <Copy className="w-3 h-3" /> Copy
-                                      </button>
+                                      <div className="p-4">
+                                        <p className="text-xs text-muted-foreground mb-3">This SQL contains safe alterations or additions.</p>
+                                        <pre className="bg-muted/50 p-3.5 rounded-lg text-xs font-mono text-foreground/80 whitespace-pre-wrap border border-border/50 overflow-x-auto shadow-inner">
+                                          {safeSqls.join('\n')}
+                                        </pre>
+                                      </div>
                                     </div>
-                                    <div className="p-4">
-                                      <p className="text-xs text-muted-foreground mb-3">This SQL contains safe alterations. Deletions are commented out.</p>
-                                      <pre className="bg-muted/50 p-3.5 rounded-lg text-xs font-mono text-foreground/80 whitespace-pre-wrap border border-border/50 overflow-x-auto shadow-inner">
-                                        {safeSqls.join('\n')}
-                                      </pre>
-                                    </div>
-                                  </div>
+                                  )}
 
                                   {/* Destructive SQL Box */}
-                                  <div className="border border-rose-500/20 bg-card rounded-lg overflow-hidden shadow-sm">
-                                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-rose-500/10 bg-rose-500/5">
-                                      <div className="flex items-center gap-2">
-                                        <AlertTriangle className="w-4 h-4 text-rose-500" />
-                                        <span className="text-sm font-semibold text-rose-500">Destructive Sync SQL (Deletions)</span>
+                                  {destructiveSqls.length > 0 && (
+                                    <div className="border border-rose-500/20 bg-card rounded-lg overflow-hidden shadow-sm">
+                                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-rose-500/10 bg-rose-500/5">
+                                        <div className="flex items-center gap-2">
+                                          <AlertTriangle className="w-4 h-4 text-rose-500" />
+                                          <span className="text-sm font-semibold text-rose-500">Destructive Sync SQL</span>
+                                        </div>
+                                        <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50 border border-transparent hover:border-border">
+                                          <Copy className="w-3 h-3" /> Copy
+                                        </button>
                                       </div>
-                                      <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50 border border-transparent hover:border-border">
-                                        <Copy className="w-3 h-3" /> Copy
-                                      </button>
-                                    </div>
-                                    <div className="p-4">
-                                      <div className="flex items-start gap-2 mb-3 bg-rose-500/10 p-2.5 rounded-md border border-rose-500/20">
-                                        <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                                        <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">Warning: Running this will drop columns and permanently delete data from prod ({targetLabel}).</p>
+                                      <div className="p-4">
+                                        <div className="flex items-start gap-2 mb-3 bg-rose-500/10 p-2.5 rounded-md border border-rose-500/20">
+                                          <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
+                                          <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">Warning: Running this will drop data from prod ({targetLabel}).</p>
+                                        </div>
+                                        <pre className="bg-muted/50 p-3.5 rounded-lg text-xs font-mono text-rose-600 dark:text-rose-400 whitespace-pre-wrap border border-rose-500/10 overflow-x-auto shadow-inner">
+                                          {destructiveSqls.join('\n')}
+                                        </pre>
                                       </div>
-                                      <pre className="bg-muted/50 p-3.5 rounded-lg text-xs font-mono text-rose-600 dark:text-rose-400 whitespace-pre-wrap border border-rose-500/10 overflow-x-auto shadow-inner">
-                                        {destructiveSqls.join('\n')}
-                                      </pre>
                                     </div>
-                                  </div>
+                                  )}
                                 </div>
 
                                 {/* Right Side: Diff Lists */}
@@ -1282,12 +1405,22 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                                       <p className="text-xs text-muted-foreground mb-4">Exists in <span className="font-medium text-foreground">{sourceLabel.toLowerCase()}</span> | Missing in <span className="font-medium text-foreground">{targetLabel.toLowerCase()}</span></p>
                                       
                                       <div className="space-y-2">
-                                        {missingInTargetCols.map(col => (
-                                          <div key={col.columnName} className="flex items-center justify-between bg-muted/50 p-3 rounded-lg border border-border/50 shadow-inner">
-                                            <span className="font-mono text-sm font-semibold text-foreground">{col.columnName}</span>
-                                            <span className="font-mono text-xs px-2.5 py-1 bg-background text-muted-foreground rounded-md border border-border/50">{col.sourceColumn?.type}</span>
-                                          </div>
-                                        ))}
+                                        {tableDiff.status === 'MISSING_IN_TARGET' ? (
+                                          <pre className="bg-muted/50 p-3.5 rounded-lg text-xs font-mono text-emerald-600 dark:text-emerald-400 whitespace-pre-wrap border border-emerald-500/10 overflow-x-auto shadow-inner">
+                                            {`CREATE TABLE ${tableDiff.tableName} (\n` + missingInTargetCols.map(c => {
+                                              const col = c.sourceColumn;
+                                              if (!col) return `    ${c.columnName}`;
+                                              return `    ${col.name} ${col.type}${!col.isNullable ? ' NOT NULL' : ''}${col.defaultValue ? ` DEFAULT ${col.defaultValue}` : ''}`;
+                                            }).join(',\n') + `\n);`}
+                                          </pre>
+                                        ) : (
+                                          missingInTargetCols.map(col => (
+                                            <div key={col.columnName} className="flex items-center justify-between bg-muted/50 p-3 rounded-lg border border-border/50 shadow-inner">
+                                              <span className="font-mono text-sm font-semibold text-foreground">{col.columnName}</span>
+                                              <span className="font-mono text-xs px-2.5 py-1 bg-background text-muted-foreground rounded-md border border-border/50">{col.sourceColumn?.type}</span>
+                                            </div>
+                                          ))
+                                        )}
                                       </div>
                                     </div>
                                   )}
@@ -1301,12 +1434,22 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                                       <p className="text-xs text-muted-foreground mb-4">Exists in <span className="font-medium text-foreground">{targetLabel.toLowerCase()}</span> | Missing in <span className="font-medium text-foreground">{sourceLabel.toLowerCase()}</span></p>
                                       
                                       <div className="space-y-2">
-                                        {missingInSourceCols.map(col => (
-                                          <div key={col.columnName} className="flex items-center justify-between bg-muted/50 p-3 rounded-lg border border-border/50 shadow-inner">
-                                            <span className="font-mono text-sm font-semibold text-foreground">{col.columnName}</span>
-                                            <span className="font-mono text-xs px-2.5 py-1 bg-background text-muted-foreground rounded-md border border-border/50">{col.targetColumn?.type}</span>
-                                          </div>
-                                        ))}
+                                        {tableDiff.status === 'MISSING_IN_SOURCE' ? (
+                                          <pre className="bg-muted/50 p-3.5 rounded-lg text-xs font-mono text-rose-600 dark:text-rose-400 whitespace-pre-wrap border border-rose-500/10 overflow-x-auto shadow-inner">
+                                            {`CREATE TABLE ${tableDiff.tableName} (\n` + missingInSourceCols.map(c => {
+                                              const col = c.targetColumn;
+                                              if (!col) return `    ${c.columnName}`;
+                                              return `    ${col.name} ${col.type}${!col.isNullable ? ' NOT NULL' : ''}${col.defaultValue ? ` DEFAULT ${col.defaultValue}` : ''}`;
+                                            }).join(',\n') + `\n);`}
+                                          </pre>
+                                        ) : (
+                                          missingInSourceCols.map(col => (
+                                            <div key={col.columnName} className="flex items-center justify-between bg-muted/50 p-3 rounded-lg border border-border/50 shadow-inner">
+                                              <span className="font-mono text-sm font-semibold text-foreground">{col.columnName}</span>
+                                              <span className="font-mono text-xs px-2.5 py-1 bg-background text-muted-foreground rounded-md border border-border/50">{col.targetColumn?.type}</span>
+                                            </div>
+                                          ))
+                                        )}
                                       </div>
                                     </div>
                                   )}
@@ -1351,8 +1494,8 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                                               : <ColBadge col={colDiff.targetColumn} />}
                                           </div>
                                         </div>
-                                        {colDiff.mismatchDetails && colDiff.mismatchDetails.length > 0 && (
-                                          <MismatchDetails details={colDiff.mismatchDetails} />
+                                        {(colDiff.propertyDiffs?.length > 0 || (colDiff.mismatchDetails && colDiff.mismatchDetails.length > 0)) && (
+                                          <MismatchDetails details={colDiff.mismatchDetails} properties={colDiff.propertyDiffs} />
                                         )}
                                       </div>
                                     );
@@ -1372,10 +1515,10 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                     </div>
                   )}
 
-                  {/* ── Primary Key section ── */}
+                  {/* Primary Key section */}
                   <PrimaryKeySection pkDiff={tableDiff.primaryKeyDiff} />
 
-                  {/* ── Foreign Keys section ── */}
+                  {/* Foreign Keys section */}
                   <SubSection title="Foreign Keys" icon={Link2} diffs={tableDiff.foreignKeyDiffs ?? []} />
 
                   <div className="px-5 py-3 text-xs text-muted-foreground border-t bg-muted/10 text-center">
