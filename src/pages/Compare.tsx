@@ -1307,6 +1307,7 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                         const missingInTargetCols: ColumnDiff[] = [];
                         const missingInSourceCols: ColumnDiff[] = [];
                         const mismatchCols: ColumnDiff[] = [];
+                        const identicalCols: ColumnDiff[] = [];
 
                         if (tableDiff.status === 'MISSING_IN_TARGET') {
                           safeSqls.push(`CREATE TABLE ${tableDiff.tableName} (`);
@@ -1334,13 +1335,15 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                               } else {
                                 missingInSourceCols.push(colDiff);
                               }
+                            } else if (colDiff.status === 'IDENTICAL') {
+                              identicalCols.push(colDiff);
                             } else {
                               mismatchCols.push(colDiff);
                             }
                           });
                         }
 
-                        const hasContent = safeSqls.length > 0 || destructiveSqls.length > 0 || missingInTargetCols.length > 0 || missingInSourceCols.length > 0 || mismatchCols.length > 0;
+                        const hasContent = safeSqls.length > 0 || destructiveSqls.length > 0 || missingInTargetCols.length > 0 || missingInSourceCols.length > 0 || mismatchCols.length > 0 || identicalCols.length > 0;
 
                         return (
                           <div className="space-y-6">
@@ -1497,6 +1500,41 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                                         {(colDiff.propertyDiffs?.length > 0 || (colDiff.mismatchDetails && colDiff.mismatchDetails.length > 0)) && (
                                           <MismatchDetails details={colDiff.mismatchDetails} properties={colDiff.propertyDiffs} />
                                         )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Identical Columns */}
+                            {identicalCols.length > 0 && (
+                              <div className="border border-border/50 rounded-xl overflow-hidden bg-card">
+                                <div className="px-5 py-2.5 bg-muted/20 flex items-center gap-2 border-b border-border/50">
+                                  <ListTree className="w-3.5 h-3.5 text-muted-foreground" />
+                                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Identical Columns</span>
+                                  <span className="text-xs text-muted-foreground">({identicalCols.length})</span>
+                                </div>
+                                <div className="divide-y divide-border/30">
+                                  {identicalCols.map((colDiff) => {
+                                    const cStat = getStatus(colDiff.status);
+                                    const CIcon = cStat.icon;
+
+                                    return (
+                                      <div key={colDiff.columnName}>
+                                        <div className="grid grid-cols-[2fr_1fr_1fr_1fr] gap-4 px-5 py-3 text-sm items-center">
+                                          <div className="flex items-center gap-2 pl-6">
+                                            <CIcon className={clsx('w-3.5 h-3.5 shrink-0', cStat.color)} />
+                                            <span className="font-medium font-mono text-xs">{colDiff.columnName}</span>
+                                          </div>
+                                          <span className={clsx('text-xs font-medium', cStat.color)}>{cStat.label}</span>
+                                          <div>
+                                            <ColBadge col={colDiff.sourceColumn} />
+                                          </div>
+                                          <div>
+                                            <ColBadge col={colDiff.targetColumn} />
+                                          </div>
+                                        </div>
                                       </div>
                                     );
                                   })}
