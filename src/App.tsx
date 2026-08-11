@@ -23,6 +23,7 @@ import CompareHistory from './pages/CompareHistory';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import TeamManagement from './pages/TeamManagement';
 import Profile from './pages/Profile';
+import Landing from './pages/Landing';
 import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from './components/ErrorFallback';
@@ -102,6 +103,9 @@ function App() {
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Landing />} />
+
           {/* Auth Routes */}
           <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>
             <Route path="/login" element={<Login />} />
@@ -113,7 +117,6 @@ function App() {
 
           {/* Dashboard Routes */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/admin-dashboard" element={<Navigate to="/dashboard" replace />} />
             <Route path="/profile" element={<Profile />} />
