@@ -274,7 +274,7 @@ export default function SuperAdminDashboard() {
                       <td className="px-6 py-3 whitespace-nowrap text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</td>
                       <td className="px-6 py-3 font-medium">{log.userEmail}</td>
                       <td className="px-6 py-3">
-                        <span className="px-2 py-1 bg-blue-500/10 text-blue-600 text-xs rounded-md font-medium">{log.action}</span>
+                        <span className="px-2 py-1 bg-neutral-800/10 text-black text-xs rounded-md font-medium">{log.action}</span>
                       </td>
                       <td className="px-6 py-3 text-muted-foreground max-w-xs truncate" title={log.details}>{log.details}</td>
                       <td className="px-6 py-3 text-xs text-muted-foreground">

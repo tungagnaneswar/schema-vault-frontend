@@ -119,7 +119,7 @@ export default function CompareProgressStepper({ steps }: { steps: ProgressStep[
                   ? 'h-full rounded-full bg-emerald-500'
                   : hasFailed
                     ? 'h-full rounded-full bg-destructive'
-                    : 'h-full rounded-full bg-blue-500'
+                    : 'h-full rounded-full bg-primary'
               }
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
@@ -143,7 +143,7 @@ export default function CompareProgressStepper({ steps }: { steps: ProgressStep[
                 className={`
                   flex items-center gap-3.5 px-6 py-3
                   ${!isLast ? 'border-b border-border/60' : ''}
-                  ${isActive ? 'bg-blue-500/[0.05] dark:bg-blue-500/[0.08]' : ''}
+                  ${isActive ? 'bg-primary/[0.05] dark:bg-primary/[0.08]' : ''}
                   ${isCompleted ? 'bg-emerald-500/[0.03] dark:bg-emerald-500/[0.05]' : ''}
                   transition-colors duration-300
                 `}
@@ -169,7 +169,7 @@ export default function CompareProgressStepper({ steps }: { steps: ProgressStep[
                         key="spin"
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center"
+                        className="w-8 h-8 rounded-full bg-primary flex items-center justify-center"
                       >
                         <Loader2 className="w-4 h-4 text-white animate-spin" />
                       </motion.div>
@@ -215,7 +215,7 @@ export default function CompareProgressStepper({ steps }: { steps: ProgressStep[
                 )}
                 {isActive && (
                   <motion.div
-                    className="w-1.5 h-1.5 rounded-full bg-blue-500"
+                    className="w-1.5 h-1.5 rounded-full bg-primary"
                     animate={{ opacity: [1, 0.3, 1] }}
                     transition={{ duration: 1.2, repeat: Infinity }}
                   />
@@ -237,7 +237,7 @@ export default function CompareProgressStepper({ steps }: { steps: ProgressStep[
                 className={`
                   h-1 rounded-full transition-all duration-500
                   ${s.status === 'completed' ? 'w-5 bg-emerald-500' :
-                    s.status === 'active' ? 'w-5 bg-blue-500' :
+                    s.status === 'active' ? 'w-5 bg-primary' :
                     s.status === 'failed' ? 'w-5 bg-destructive' :
                     'w-2.5 bg-muted-foreground/20'}
                 `}

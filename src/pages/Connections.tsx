@@ -35,13 +35,13 @@ const emptyForm = {
 const ENV_COLORS: Record<string, string> = {
   PROD: 'bg-rose-500/10 text-rose-500',
   UAT:  'bg-amber-500/10 text-amber-500',
-  QA:   'bg-blue-500/10 text-blue-500',
+  QA:   'bg-neutral-800/10 text-neutral-800',
   DEV:  'bg-emerald-500/10 text-emerald-500',
 };
 
 const ENGINE_COLORS: Record<string, string> = {
-  POSTGRES: 'bg-sky-500/10 text-sky-600',
-  MYSQL:    'bg-orange-500/10 text-orange-600',
+  POSTGRES: 'bg-neutral-800/10 text-black',
+  MYSQL:    'bg-slate-500/10 text-slate-600',
 };
 
 const ENGINE_LABELS: Record<string, string> = {

@@ -22,7 +22,7 @@ function getStrength(password: string): PasswordStrength {
   const clamped = Math.min(score, 4) as 0 | 1 | 2 | 3 | 4;
   const map: Record<0 | 1 | 2 | 3 | 4, { label: string; color: string }> = {
     0: { label: 'Too short', color: 'bg-destructive' },
-    1: { label: 'Weak',      color: 'bg-orange-500' },
+    1: { label: 'Weak',      color: 'bg-neutral-800' },
     2: { label: 'Fair',      color: 'bg-yellow-500' },
     3: { label: 'Good',      color: 'bg-emerald-400' },
     4: { label: 'Strong',    color: 'bg-emerald-500' },
@@ -195,7 +195,7 @@ export default function ResetPassword() {
               </div>
               <p className={[
                 'text-xs font-medium',
-                strength.score <= 1 ? 'text-orange-500' :
+                strength.score <= 1 ? 'text-neutral-800' :
                 strength.score === 2 ? 'text-yellow-500' : 'text-emerald-500',
               ].join(' ')}>
                 {strength.label}

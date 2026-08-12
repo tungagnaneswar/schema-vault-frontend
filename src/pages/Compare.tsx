@@ -175,7 +175,7 @@ function ColBadge({ col }: { col: ColumnInfo | null }) {
     <div className="flex flex-wrap gap-1">
       <span className="font-mono text-xs px-1.5 py-0.5 bg-muted rounded">{col.type}</span>
       {col.maxLength && <span className="font-mono text-xs px-1.5 py-0.5 bg-muted rounded">len:{col.maxLength}</span>}
-      <span className={clsx('text-xs px-1.5 py-0.5 rounded font-medium', col.isNullable ? 'bg-sky-500/10 text-sky-500' : 'bg-orange-500/10 text-orange-500')}>
+      <span className={clsx('text-xs px-1.5 py-0.5 rounded font-medium', col.isNullable ? 'bg-slate-500/10 text-slate-500' : 'bg-neutral-800/10 text-neutral-800')}>
         {col.isNullable ? 'NULL' : 'NOT NULL'}
       </span>
       {col.defaultValue && <span className="font-mono text-xs px-1.5 py-0.5 bg-muted rounded truncate max-w-[140px]" title={col.defaultValue}>def:{col.defaultValue}</span>}
@@ -755,7 +755,7 @@ export default function Compare() {
       </PageHeader>
 
       {!dismissMobileWarning && (
-        <div className="md:hidden flex items-start gap-3 bg-blue-500/10 border border-blue-500/20 text-blue-600 rounded-lg p-4 mb-6 relative">
+        <div className="md:hidden flex items-start gap-3 bg-neutral-800/10 border border-neutral-800/20 text-black rounded-lg p-4 mb-6 relative">
           <MonitorSmartphone className="w-5 h-5 shrink-0 mt-0.5" />
           <div className="pr-6">
             <h4 className="text-sm font-semibold mb-1">For the best experience</h4>
@@ -766,7 +766,7 @@ export default function Compare() {
               setDismissMobileWarning(true);
               localStorage.setItem('hideCompareMobileWarning', 'true');
             }}
-            className="absolute top-3 right-3 p-1 hover:bg-blue-500/20 rounded-md transition-colors"
+            className="absolute top-3 right-3 p-1 hover:bg-neutral-800/20 rounded-md transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1252,7 +1252,7 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                   : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />}
                 <span className="font-semibold">{tableDiff.tableName}</span>
                 {tableDiff.status === 'MISSING_IN_TARGET' && (
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
                     Only in {sourceLabel}
                   </span>
                 )}
@@ -1353,11 +1353,11 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                                 <div className="space-y-4">
                                   {/* Safe SQL Box */}
                                   {safeSqls.length > 0 && (
-                                    <div className="border border-blue-500/20 bg-card rounded-lg overflow-hidden shadow-sm">
-                                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-blue-500/10 bg-blue-500/5">
+                                    <div className="border border-emerald-500/20 bg-card rounded-lg overflow-hidden shadow-sm">
+                                      <div className="flex items-center justify-between px-4 py-2.5 border-b border-emerald-500/10 bg-emerald-500/5">
                                         <div className="flex items-center gap-2">
-                                          <ShieldCheck className="w-4 h-4 text-blue-500" />
-                                          <span className="text-sm font-semibold text-blue-500">Sync SQL (Safe)</span>
+                                          <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                                          <span className="text-sm font-semibold text-emerald-500">Sync SQL (Safe)</span>
                                         </div>
                                         <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-muted/50 border border-transparent hover:border-border">
                                           <Copy className="w-3 h-3" /> Copy

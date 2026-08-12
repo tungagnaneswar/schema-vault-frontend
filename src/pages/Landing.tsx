@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { type RootState } from '../store/store';
@@ -5,42 +6,62 @@ import {
   Database, ArrowRight, GitMerge, Search, FileCode, Layers, 
   CheckCircle2, AlertTriangle, AlertCircle, Plus, Minus, XCircle,
   ShieldCheck, Lock, RefreshCcw, Workflow, Server, Key,
-  Table2, Code, GitBranch
+  Table2, Code, GitBranch, ArrowUp
 } from 'lucide-react';
 
 export default function Landing() {
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const [showTopBtn, setShowTopBtn] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowTopBtn(true);
+      } else {
+        setShowTopBtn(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const goToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-orange-500/20 selection:text-orange-600">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-neutral-800/20 selection:text-black">
       {/* 1. HEADER */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="bg-orange-50 p-1.5 rounded-lg border border-orange-100">
-              <Database className="h-5 w-5 text-[#EA580C]" />
+            <div className="bg-neutral-100 p-1.5 rounded-lg border border-neutral-200">
+              <Database className="h-5 w-5 text-[#000000]" />
             </div>
             <span className="font-bold text-lg tracking-tight">SchemaVault</span>
           </div>
           
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#product" className="text-sm font-medium text-muted-foreground hover:text-orange-600 transition-colors">Product</a>
-            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-orange-600 transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-orange-600 transition-colors">How It Works</a>
-            <a href="#use-cases" className="text-sm font-medium text-muted-foreground hover:text-orange-600 transition-colors">Use Cases</a>
+            <a href="#product" className="text-sm font-medium text-muted-foreground hover:text-[#000000] transition-colors">Product</a>
+            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-[#000000] transition-colors">Features</a>
+            <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-[#000000] transition-colors">How It Works</a>
+            <a href="#use-cases" className="text-sm font-medium text-muted-foreground hover:text-[#000000] transition-colors">Use Cases</a>
           </nav>
 
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
-              <Link to="/dashboard" className="text-sm font-medium bg-[#EA580C] text-white px-4 py-2 rounded-md hover:bg-[#C2410C] transition-colors shadow-xs inline-flex items-center gap-1.5">
+              <Link to="/dashboard" className="text-sm font-medium bg-[#000000] text-white px-4 py-2 rounded-md hover:bg-[#262626] transition-colors shadow-xs inline-flex items-center gap-1.5">
                 Dashboard <ArrowRight className="w-4 h-4" />
               </Link>
             ) : (
               <>
-                <Link to="/login" className="text-sm font-medium px-4 py-2 hover:bg-orange-50/50 hover:text-orange-600 rounded-md transition-colors">
+                <Link to="/login" className="text-sm font-medium px-4 py-2 hover:bg-neutral-100/50 hover:text-[#000000] rounded-md transition-colors">
                   Login
                 </Link>
-                <Link to="/register" className="text-sm font-medium bg-[#EA580C] text-white px-4 py-2 rounded-md hover:bg-[#C2410C] transition-colors shadow-xs">
+                <Link to="/register" className="text-sm font-medium bg-[#000000] text-white px-4 py-2 rounded-md hover:bg-[#262626] transition-colors shadow-xs">
                   Get Started
                 </Link>
               </>
@@ -53,15 +74,15 @@ export default function Landing() {
         {/* 2. HERO SECTION */}
         <section className="py-20 md:py-32 overflow-hidden relative border-b border-border">
           {/* Subtle grid background */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ea580c08_1px,transparent_1px),linear-gradient(to_bottom,#ea580c08_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#26262608_1px,transparent_1px),linear-gradient(to_bottom,#26262608_1px,transparent_1px)] bg-[size:24px_24px]"></div>
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               
               {/* Left Column */}
               <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50 border border-orange-100 text-xs font-semibold uppercase tracking-wider text-orange-700 mb-6 shadow-2xs">
-                  <Database className="w-3.5 h-3.5 text-orange-600" />
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 border border-neutral-200 text-xs font-semibold uppercase tracking-wider text-neutral-900 mb-6 shadow-2xs">
+                  <Database className="w-3.5 h-3.5 text-black" />
                   Database Schema Management
                 </div>
                 
@@ -76,15 +97,15 @@ export default function Landing() {
                 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
                   {isAuthenticated ? (
-                    <Link to="/dashboard" className="inline-flex items-center justify-center bg-[#EA580C] text-white px-6 py-3 rounded-md font-medium hover:bg-[#C2410C] transition-colors shadow-sm text-sm gap-2">
+                    <Link to="/dashboard" className="inline-flex items-center justify-center bg-[#000000] text-white px-6 py-3 rounded-md font-medium hover:bg-[#262626] transition-colors shadow-sm text-sm gap-2">
                       Go to Dashboard <ArrowRight className="w-4 h-4" />
                     </Link>
                   ) : (
-                    <Link to="/register" className="inline-flex items-center justify-center bg-[#EA580C] text-white px-6 py-3 rounded-md font-medium hover:bg-[#C2410C] transition-colors shadow-sm text-sm">
+                    <Link to="/register" className="inline-flex items-center justify-center bg-[#000000] text-white px-6 py-3 rounded-md font-medium hover:bg-[#262626] transition-colors shadow-sm text-sm">
                       Get Started
                     </Link>
                   )}
-                  <a href="#how-it-works" className="inline-flex items-center justify-center bg-background text-foreground px-6 py-3 rounded-md font-medium border border-border hover:bg-orange-50/50 hover:text-orange-700 hover:border-orange-200 transition-colors shadow-2xs text-sm">
+                  <a href="#how-it-works" className="inline-flex items-center justify-center bg-background text-foreground px-6 py-3 rounded-md font-medium border border-border hover:bg-neutral-100/50 hover:text-[#262626] hover:border-neutral-300 transition-colors shadow-2xs text-sm">
                     View How It Works
                   </a>
                 </div>
@@ -105,7 +126,7 @@ export default function Landing() {
                       <div className="w-3 h-3 rounded-full bg-amber-400/60"></div>
                       <div className="w-3 h-3 rounded-full bg-emerald-400/60"></div>
                     </div>
-                    <div className="text-xs font-semibold text-orange-700 px-3 py-1 bg-orange-50/80 rounded border border-orange-100 shadow-2xs">
+                    <div className="text-xs font-semibold text-[#262626] px-3 py-1 bg-neutral-100/80 rounded border border-neutral-200 shadow-2xs">
                       Compare Schemas
                     </div>
                     <div className="w-10"></div>
@@ -121,14 +142,14 @@ export default function Landing() {
                           <Server className="w-4 h-4 text-slate-700" /> Development
                         </div>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-orange-400 shrink-0" />
+                      <ArrowRight className="w-4 h-4 text-neutral-500 shrink-0" />
                       <div className="flex-1">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Target</p>
                         <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                           <Server className="w-4 h-4 text-emerald-600" /> Production
                         </div>
                       </div>
-                      <button className="bg-[#EA580C] hover:bg-[#C2410C] text-white text-xs font-semibold px-4 py-2 rounded-md shadow-2xs transition-colors">
+                      <button className="bg-[#000000] hover:bg-[#262626] text-white text-xs font-semibold px-4 py-2 rounded-md shadow-2xs transition-colors">
                         Compare
                       </button>
                     </div>
@@ -179,7 +200,7 @@ export default function Landing() {
                 </div>
                 
                 {/* Decorative subtle orange glow behind the card */}
-                <div className="absolute -inset-6 bg-gradient-to-tr from-orange-500/8 via-orange-500/4 to-transparent blur-3xl -z-10 rounded-[3rem]"></div>
+                <div className="absolute -inset-6 bg-gradient-to-tr from-neutral-800/8 via-neutral-800/4 to-transparent blur-3xl -z-10 rounded-[3rem]"></div>
               </div>
 
             </div>
@@ -206,7 +227,7 @@ export default function Landing() {
               
               <div className="flex flex-col items-center shrink-0">
                 <div className="w-px h-8 md:w-8 md:h-px bg-border md:hidden block"></div>
-                <div className="bg-[#EA580C] text-white text-xs font-bold px-4.5 py-2 rounded-full flex items-center gap-2 shadow-md z-10 my-2 md:my-0 mx-2">
+                <div className="bg-[#262626] text-white text-xs font-bold px-4.5 py-2 rounded-full flex items-center gap-2 shadow-md z-10 my-2 md:my-0 mx-2">
                   <Search className="w-3.5 h-3.5 text-white" />
                   Compare
                 </div>
@@ -244,7 +265,7 @@ export default function Landing() {
             <div className="max-w-5xl mx-auto border border-border rounded-xl bg-card shadow-lg overflow-hidden">
               <div className="border-b border-border px-4 py-3 bg-slate-50/80 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                  <Table2 className="w-4 h-4 text-orange-600" /> Table: <span className="font-mono text-slate-900 font-bold">products</span>
+                  <Table2 className="w-4 h-4 text-black" /> Table: <span className="font-mono text-slate-900 font-bold">products</span>
                 </div>
                 <div className="flex gap-2">
                   <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-full font-bold">DEFINITION_MISMATCH</span>
@@ -310,7 +331,7 @@ export default function Landing() {
                     </div>
                     <div className="grid grid-cols-4 gap-4 px-4 py-3 items-center text-xs">
                       <span className="font-mono font-medium text-slate-800">data_type</span>
-                      <span className="font-mono text-orange-700 bg-orange-50 border border-orange-100 px-1.5 py-0.5 rounded w-max">text</span>
+                      <span className="font-mono text-neutral-900 bg-neutral-100 border border-neutral-200 px-1.5 py-0.5 rounded w-max">text</span>
                       <span className="font-mono text-slate-600">character varying</span>
                       <span className="w-max px-2.5 py-0.5 rounded-full font-bold text-[10px] text-amber-700 bg-amber-50 border border-amber-200">REVIEW</span>
                     </div>
@@ -336,14 +357,14 @@ export default function Landing() {
                 {
                   title: 'Schema Comparison',
                   description: 'Compare two PostgreSQL schemas and quickly identify all structural differences.',
-                  icon: <GitMerge className="h-5 w-5 text-orange-600" />,
-                  style: 'bg-orange-50 border-orange-100'
+                  icon: <GitMerge className="h-5 w-5 text-black" />,
+                  style: 'bg-neutral-100 border-neutral-200'
                 },
                 {
                   title: 'Difference Detection',
                   description: 'Detect added, removed, and modified database objects including tables, views, and functions.',
-                  icon: <Search className="h-5 w-5 text-orange-600" />,
-                  style: 'bg-orange-50 border-orange-100'
+                  icon: <Search className="h-5 w-5 text-black" />,
+                  style: 'bg-neutral-100 border-neutral-200'
                 },
                 {
                   title: 'Column Changes',
@@ -360,17 +381,17 @@ export default function Landing() {
                 {
                   title: 'Environment Verification',
                   description: 'Check whether your development, staging, and production schemas are perfectly aligned.',
-                  icon: <Layers className="h-5 w-5 text-orange-600" />,
-                  style: 'bg-orange-50 border-orange-100'
+                  icon: <Layers className="h-5 w-5 text-black" />,
+                  style: 'bg-neutral-100 border-neutral-200'
                 },
                 {
                   title: 'Schema Snapshots',
                   description: 'Capture point-in-time states of your database structure for future comparison and auditing.',
-                  icon: <Database className="h-5 w-5 text-orange-600" />,
-                  style: 'bg-orange-50 border-orange-100'
+                  icon: <Database className="h-5 w-5 text-black" />,
+                  style: 'bg-neutral-100 border-neutral-200'
                 }
               ].map((feature, idx) => (
-                <div key={idx} className="p-6 rounded-xl border border-border bg-background shadow-2xs hover:shadow-md hover:border-orange-200 transition-all">
+                <div key={idx} className="p-6 rounded-xl border border-border bg-background shadow-2xs hover:shadow-md hover:border-neutral-300 transition-all">
                   <div className={`mb-4 h-10 w-10 rounded-lg border flex items-center justify-center ${feature.style}`}>
                     {feature.icon}
                   </div>
@@ -393,7 +414,7 @@ export default function Landing() {
 
             <div className="max-w-4xl mx-auto relative">
               {/* Desktop Connecting Line */}
-              <div className="hidden md:block absolute top-6 left-20 right-20 h-[2px] bg-gradient-to-r from-orange-200 via-orange-200 to-emerald-200 opacity-60"></div>
+              <div className="hidden md:block absolute top-6 left-20 right-20 h-[2px] bg-gradient-to-r from-neutral-300 via-neutral-300 to-emerald-200 opacity-60"></div>
 
               <div className="grid md:grid-cols-3 gap-12 relative z-10">
                 {[
@@ -401,13 +422,13 @@ export default function Landing() {
                     step: '01',
                     title: 'Connect databases',
                     description: 'Provide the required PostgreSQL connection information for your environments.',
-                    stepStyle: 'bg-orange-50 border-orange-200 text-orange-700'
+                    stepStyle: 'bg-neutral-100 border-neutral-300 text-neutral-900'
                   },
                   {
                     step: '02',
                     title: 'Compare schemas',
                     description: 'Select the source and target schemas you wish to evaluate and run the comparison.',
-                    stepStyle: 'bg-orange-50 border-orange-200 text-orange-700'
+                    stepStyle: 'bg-neutral-100 border-neutral-300 text-neutral-900'
                   },
                   {
                     step: '03',
@@ -444,12 +465,12 @@ export default function Landing() {
               <div className="border border-border p-6 rounded-xl bg-background hover:border-slate-300 transition-all shadow-2xs">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="bg-orange-50 border border-orange-100 p-2.5 rounded-lg text-orange-600">
+                    <div className="bg-neutral-100 border border-neutral-200 p-2.5 rounded-lg text-black">
                       <GitBranch className="w-5 h-5" />
                     </div>
                     <h3 className="font-semibold text-slate-900">Development → Staging</h3>
                   </div>
-                  <span className="text-[10px] font-semibold bg-orange-50 text-orange-700 border border-orange-100 px-2 py-0.5 rounded">DEV</span>
+                  <span className="text-[10px] font-semibold bg-neutral-100 text-neutral-900 border border-neutral-200 px-2 py-0.5 rounded">DEV</span>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">Verify that your staging environment exactly matches the expected development schema before broader testing.</p>
               </div>
@@ -509,15 +530,15 @@ export default function Landing() {
                 </p>
                 <ul className="space-y-4">
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-orange-400 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-neutral-500 mt-0.5 shrink-0" />
                     <span className="text-sm text-background/90">Native PostgreSQL parsing for accurate object resolution</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-orange-400 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-neutral-500 mt-0.5 shrink-0" />
                     <span className="text-sm text-background/90">Clear, granular difference reporting down to column attributes</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-orange-400 mt-0.5 shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-neutral-500 mt-0.5 shrink-0" />
                     <span className="text-sm text-background/90">Environment-based comparison for realistic deployment checks</span>
                   </li>
                 </ul>
@@ -526,29 +547,29 @@ export default function Landing() {
               <div className="bg-[#0D1117] border border-slate-800 rounded-xl p-5 font-mono text-[13px] text-slate-300 shadow-2xl leading-relaxed">
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800 text-xs text-slate-400">
                   <div className="flex items-center gap-2">
-                    <Code className="w-4 h-4 text-orange-400" /> <span>diff_output.json</span>
+                    <Code className="w-4 h-4 text-neutral-500" /> <span>diff_output.json</span>
                   </div>
-                  <span className="text-[10px] bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded font-mono border border-orange-500/20">POSTGRESQL</span>
+                  <span className="text-[10px] bg-neutral-800/10 text-neutral-500 px-2 py-0.5 rounded font-mono border border-neutral-800/20">POSTGRESQL</span>
                 </div>
                 <div className="space-y-1">
                   <div>&#123;</div>
                   <div className="pl-4">
-                    <span className="text-orange-400">"tableName"</span>: <span className="text-slate-200">"users"</span>,
+                    <span className="text-neutral-500">"tableName"</span>: <span className="text-slate-200">"users"</span>,
                   </div>
                   <div className="pl-4">
-                    <span className="text-orange-400">"status"</span>: <span className="text-amber-400">"MODIFIED"</span>,
+                    <span className="text-neutral-500">"status"</span>: <span className="text-amber-400">"MODIFIED"</span>,
                   </div>
                   <div className="pl-4">
-                    <span className="text-orange-400">"columnDiffs"</span>: [
+                    <span className="text-neutral-500">"columnDiffs"</span>: [
                   </div>
                   <div className="pl-8 text-emerald-400/90 bg-emerald-500/10 -mx-4 px-4 py-0.5 rounded border-l-2 border-emerald-400">
-                    + &#123; <span className="text-orange-300">"column"</span>: <span className="text-emerald-300">"last_login"</span>, <span className="text-orange-300">"type"</span>: <span className="text-emerald-300">"timestamptz"</span> &#125;
+                    + &#123; <span className="text-neutral-400">"column"</span>: <span className="text-emerald-300">"last_login"</span>, <span className="text-neutral-400">"type"</span>: <span className="text-emerald-300">"timestamptz"</span> &#125;
                   </div>
                   <div className="pl-8 text-purple-300/90 bg-purple-500/10 -mx-4 px-4 py-0.5 rounded border-l-2 border-purple-400">
-                    ~ &#123; <span className="text-orange-300">"column"</span>: <span className="text-amber-300">"role"</span>, <span className="text-orange-300">"type"</span>: <span className="text-slate-400 line-through">"varchar"</span> &rarr; <span className="text-purple-300">"user_role"</span> &#125;
+                    ~ &#123; <span className="text-neutral-400">"column"</span>: <span className="text-amber-300">"role"</span>, <span className="text-neutral-400">"type"</span>: <span className="text-slate-400 line-through">"varchar"</span> &rarr; <span className="text-purple-300">"user_role"</span> &#125;
                   </div>
                   <div className="pl-8 text-rose-400/90 bg-rose-500/10 -mx-4 px-4 py-0.5 rounded border-l-2 border-rose-400">
-                    - &#123; <span className="text-orange-300">"column"</span>: <span className="text-rose-300">"legacy_id"</span> &#125;
+                    - &#123; <span className="text-neutral-400">"column"</span>: <span className="text-rose-300">"legacy_id"</span> &#125;
                   </div>
                   <div className="pl-4">]</div>
                   <div>&#125;</div>
@@ -566,13 +587,13 @@ export default function Landing() {
             </h2>
             <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-orange-600" /> Authentication
+                <Lock className="w-4 h-4 text-black" /> Authentication
               </div>
               <div className="flex items-center gap-2">
-                <Key className="w-4 h-4 text-orange-600" /> Role-based access
+                <Key className="w-4 h-4 text-black" /> Role-based access
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-orange-600" /> Secure connections
+                <ShieldCheck className="w-4 h-4 text-black" /> Secure connections
               </div>
             </div>
           </div>
@@ -581,7 +602,7 @@ export default function Landing() {
         {/* 10. FINAL CTA */}
         <section className="py-24 relative overflow-hidden bg-slate-50/60">
           <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-3xl mx-auto bg-[#FFF7ED] border border-orange-100 rounded-2xl p-12 text-center shadow-md">
+            <div className="max-w-3xl mx-auto bg-[#FFF7ED] border border-neutral-200 rounded-2xl p-12 text-center shadow-md">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-slate-900">
                 Stop guessing what changed.
               </h2>
@@ -590,12 +611,12 @@ export default function Landing() {
               </p>
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 {isAuthenticated ? (
-                  <Link to="/dashboard" className="inline-flex items-center justify-center bg-[#EA580C] hover:bg-[#C2410C] text-white px-8 py-3 rounded-md font-medium transition-colors text-sm shadow-sm gap-2">
+                  <Link to="/dashboard" className="inline-flex items-center justify-center bg-[#000000] hover:bg-[#262626] text-white px-8 py-3 rounded-md font-medium transition-colors text-sm shadow-sm gap-2">
                     Go to Dashboard <ArrowRight className="w-4 h-4" />
                   </Link>
                 ) : (
                   <>
-                    <Link to="/register" className="inline-flex items-center justify-center bg-[#EA580C] hover:bg-[#C2410C] text-white px-8 py-3 rounded-md font-medium transition-colors text-sm shadow-sm">
+                    <Link to="/register" className="inline-flex items-center justify-center bg-[#000000] hover:bg-[#262626] text-white px-8 py-3 rounded-md font-medium transition-colors text-sm shadow-sm">
                       Get Started
                     </Link>
                     <Link to="/login" className="inline-flex items-center justify-center bg-white text-foreground px-8 py-3 rounded-md font-medium border border-border hover:bg-slate-50 transition-colors text-sm shadow-2xs">
@@ -615,8 +636,8 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-16">
             <div className="col-span-2 lg:col-span-2">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="bg-orange-50 p-1.5 rounded-lg border border-orange-100">
-                  <Database className="h-4 w-4 text-[#EA580C]" />
+                <div className="bg-neutral-100 p-1.5 rounded-lg border border-neutral-200">
+                  <Database className="h-4 w-4 text-[#000000]" />
                 </div>
                 <span className="font-bold text-lg tracking-tight">SchemaVault</span>
               </div>
@@ -628,9 +649,9 @@ export default function Landing() {
             <div>
               <h4 className="font-semibold text-sm mb-4">Product</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="#features" className="hover:text-orange-600 transition-colors">Features</a></li>
-                <li><a href="#how-it-works" className="hover:text-orange-600 transition-colors">How It Works</a></li>
-                <li><a href="#use-cases" className="hover:text-orange-600 transition-colors">Use Cases</a></li>
+                <li><a href="#features" className="hover:text-black transition-colors">Features</a></li>
+                <li><a href="#how-it-works" className="hover:text-black transition-colors">How It Works</a></li>
+                <li><a href="#use-cases" className="hover:text-black transition-colors">Use Cases</a></li>
               </ul>
             </div>
             
@@ -639,13 +660,13 @@ export default function Landing() {
               <ul className="space-y-3 text-sm text-muted-foreground">
                 {isAuthenticated ? (
                   <>
-                    <li><Link to="/dashboard" className="hover:text-orange-600 transition-colors">Dashboard</Link></li>
-                    <li><Link to="/projects" className="hover:text-orange-600 transition-colors">Projects</Link></li>
+                    <li><Link to="/dashboard" className="hover:text-black transition-colors">Dashboard</Link></li>
+                    <li><Link to="/projects" className="hover:text-black transition-colors">Projects</Link></li>
                   </>
                 ) : (
                   <>
-                    <li><Link to="/login" className="hover:text-orange-600 transition-colors">Login</Link></li>
-                    <li><Link to="/register" className="hover:text-orange-600 transition-colors">Register</Link></li>
+                    <li><Link to="/login" className="hover:text-black transition-colors">Login</Link></li>
+                    <li><Link to="/register" className="hover:text-black transition-colors">Register</Link></li>
                   </>
                 )}
               </ul>
@@ -654,8 +675,8 @@ export default function Landing() {
             <div>
               <h4 className="font-semibold text-sm mb-4">Legal</h4>
               <ul className="space-y-3 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-orange-600 transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-orange-600 transition-colors">Terms</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Privacy</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Terms</a></li>
               </ul>
             </div>
           </div>
@@ -665,6 +686,17 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      {/* Scroll to Top Button */}
+      {showTopBtn && (
+        <button
+          onClick={goToTop}
+          className="fixed bottom-8 right-8 z-50 p-3 bg-black text-white rounded-full shadow-lg hover:bg-neutral-800 hover:shadow-xl transition-all duration-300 ease-in-out hover:-translate-y-1"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }

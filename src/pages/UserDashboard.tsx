@@ -22,7 +22,7 @@ export default function UserDashboard() {
     : { name: 'Teams', value: data?.teams ?? 0, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' };
 
   const stats = [
-    { name: 'Active Connections', value: data?.activeConnections ?? 0, icon: Database, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { name: 'Active Connections', value: data?.activeConnections ?? 0, icon: Database, color: 'text-neutral-800', bg: 'bg-neutral-800/10' },
     { name: 'Schemas Compared', value: data?.schemasCompared ?? 0, icon: GitCompare, color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { name: 'System Alerts', value: data?.systemAlerts ?? 0, icon: Activity, color: 'text-rose-500', bg: 'bg-rose-500/10' },
     fourthStat,
@@ -95,7 +95,7 @@ export default function UserDashboard() {
                           <td className="py-3 px-4">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${comp.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
                                 comp.status === 'FAILED' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' :
-                                  'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
+                                  'bg-neutral-200 text-neutral-900 dark:bg-neutral-800/20 dark:text-neutral-500'
                               }`}>
                               {comp.status}
                             </span>
