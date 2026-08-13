@@ -24,6 +24,9 @@ import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import TeamManagement from './pages/TeamManagement';
 import Profile from './pages/Profile';
 import Landing from './pages/Landing';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import Security from './pages/Security';
 import React from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from './components/ErrorFallback';
@@ -105,6 +108,9 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/security" element={<Security />} />
 
           {/* Auth Routes */}
           <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>

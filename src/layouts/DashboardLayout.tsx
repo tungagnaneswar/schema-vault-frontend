@@ -72,7 +72,7 @@ export default function DashboardLayout() {
       {/* Sidebar */}
       <aside
         className={clsx(
-          'bg-background border-r flex flex-col shadow-sm hidden md:flex shrink-0 transition-all duration-300 ease-in-out',
+          'bg-card border-r flex flex-col shadow-sm hidden md:flex shrink-0 transition-all duration-300 ease-in-out',
           isSidebarCollapsed ? 'w-16' : 'w-64'
         )}
       >
@@ -156,7 +156,7 @@ export default function DashboardLayout() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <header className="h-16 bg-background border-b flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
+        <header className="h-16 bg-card border-b flex items-center justify-between px-6 shrink-0 shadow-sm z-10">
           <div className="flex items-center md:hidden">
             <ShieldCheck className="w-6 h-6 text-primary mr-2" />
             <h1 className="text-lg font-bold tracking-tight text-foreground">SchemaDiff</h1>

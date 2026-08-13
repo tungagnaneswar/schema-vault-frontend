@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Database, GitCompare, Activity, Users } from 'lucide-react';
+import { Folder, GitCompare, Activity, Users } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '../api/dashboardApi';
@@ -22,7 +22,7 @@ export default function UserDashboard() {
     : { name: 'Teams', value: data?.teams ?? 0, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' };
 
   const stats = [
-    { name: 'Active Connections', value: data?.activeConnections ?? 0, icon: Database, color: 'text-neutral-800', bg: 'bg-neutral-800/10' },
+    { name: 'Projects', value: data?.projects ?? 0, icon: Folder, color: 'text-sky-500', bg: 'bg-sky-500/10' },
     { name: 'Schemas Compared', value: data?.schemasCompared ?? 0, icon: GitCompare, color: 'text-purple-500', bg: 'bg-purple-500/10' },
     { name: 'System Alerts', value: data?.systemAlerts ?? 0, icon: Activity, color: 'text-rose-500', bg: 'bg-rose-500/10' },
     fourthStat,

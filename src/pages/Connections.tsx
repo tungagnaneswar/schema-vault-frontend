@@ -40,8 +40,8 @@ const ENV_COLORS: Record<string, string> = {
 };
 
 const ENGINE_COLORS: Record<string, string> = {
-  POSTGRES: 'bg-neutral-800/10 text-black',
-  MYSQL:    'bg-slate-500/10 text-slate-600',
+  POSTGRES: 'bg-blue-500/10 text-blue-600',
+  MYSQL:    'bg-amber-500/10 text-amber-600',
 };
 
 const ENGINE_LABELS: Record<string, string> = {

@@ -1,6 +1,7 @@
 import api from './axios';
 
 export interface DashboardStats {
+  projects?: number;
   activeConnections: number;
   schemasCompared: number;
   systemAlerts: number;
