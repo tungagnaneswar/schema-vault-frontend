@@ -30,7 +30,6 @@ import CompareHistory from './pages/CompareHistory';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import TeamManagement from './pages/TeamManagement';
 import Profile from './pages/Profile';
-import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Security from './pages/Security';
@@ -72,7 +71,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          <Route path="/" element={<Landing />} />
+          {/* <Route path="/" element={<Landing />} /> */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/security" element={<Security />} />
