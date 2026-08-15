@@ -92,7 +92,10 @@ api.interceptors.response.use(
         isRefreshing = false;
 
         store.dispatch(logout());
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        const publicPaths = ['/', '/login', '/register', '/privacy', '/terms', '/security'];
+        const currentPath = window.location.pathname;
+        const isPublicPath = publicPaths.includes(currentPath) || currentPath.startsWith('/auth/');
+        if (!isPublicPath) {
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);

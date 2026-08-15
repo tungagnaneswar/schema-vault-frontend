@@ -74,15 +74,12 @@ export default function TeamManagement() {
       const responseData = connectionsResult.value.data;
       const connectionsData = responseData.content ?? responseData;
       setAvailableConnections(Array.isArray(connectionsData) ? connectionsData : []);
-    } else {
-      console.error('Failed to fetch available connections', connectionsResult.reason);
     }
 
     if (usersResult.status === 'fulfilled') {
       setAvailableUsers(Array.isArray(usersResult.value) ? usersResult.value : []);
     } else {
-      console.error('Failed to fetch available users', usersResult.reason);
-      setError('Failed to load users. Please refresh the page and try again.');
+      setError('Failed to load available users. Please refresh the page and try again.');
     }
   };
 

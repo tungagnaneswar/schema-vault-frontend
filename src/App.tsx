@@ -9,6 +9,13 @@ import api from './api/axios';
 import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 
+// Components & Route Guards
+import ProtectedRoute from './components/ProtectedRoute';
+import GuestRoute from './components/GuestRoute';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorFallback } from './components/ErrorFallback';
+import SessionLoader from './components/SessionLoader';
+
 // Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -27,48 +34,6 @@ import Landing from './pages/Landing';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Security from './pages/Security';
-import React from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
-import { ErrorFallback } from './components/ErrorFallback';
-import SessionLoader from './components/SessionLoader';
-
-const GuestRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isInitializing } = useSelector((state: RootState) => state.auth);
-  if (isInitializing) {
-    return null;
-  }
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  return children;
-};
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isInitializing } = useSelector((state: RootState) => state.auth);
-  if (isInitializing) {
-    return null;
-  }
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  return children;
-};
-
-const SuperAdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const user = useSelector((state: RootState) => state.auth.user);
-  if (user?.role !== GLOBAL_ROLES.SUPER_ADMIN) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  return children;
-};
-
-const AdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const user = useSelector((state: RootState) => state.auth.user);
-  if (user?.role !== GLOBAL_ROLES.SUPER_ADMIN && user?.role !== GLOBAL_ROLES.ADMIN) {
-    return <Navigate to="/dashboard" replace />;
-  }
-  return children;
-};
 
 function App() {
   const dispatch = useDispatch();
@@ -124,7 +89,6 @@ function App() {
           {/* Dashboard Routes */}
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<UserDashboard />} />
-            <Route path="/admin-dashboard" element={<Navigate to="/dashboard" replace />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:projectId/connections" element={<Connections />} />
@@ -138,24 +102,18 @@ function App() {
             <Route
               path="/super-admin-dashboard"
               element={
-                <SuperAdminRoute>
+                <ProtectedRoute allowedRoles={[GLOBAL_ROLES.SUPER_ADMIN]}>
                   <SuperAdminDashboard />
-                </SuperAdminRoute>
+                </ProtectedRoute>
               }
             />
-            <Route path="/super-admin" element={<Navigate to="/super-admin-dashboard" replace />} />
 
             {/* Team Management Route */}
-            <Route
-              path="/team-management"
-              element={
-                <AdminRoute>
-                  <TeamManagement />
-                </AdminRoute>
-              }
-            />
-            <Route path="/admin" element={<Navigate to="/team-management" replace />} />
+            <Route path="/team-management" element={<TeamManagement />} />
           </Route>
+
+          {/* Catch-all Fallback */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

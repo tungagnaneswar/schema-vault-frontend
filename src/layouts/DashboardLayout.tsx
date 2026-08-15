@@ -44,17 +44,14 @@ export default function DashboardLayout() {
   const baseNavItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Projects', path: '/projects', icon: Folder },
+    { name: 'Team Management', path: '/team-management', icon: Users },
   ];
-
-  const adminNavItems = user?.role === GLOBAL_ROLES.SUPER_ADMIN || user?.role === GLOBAL_ROLES.ADMIN
-    ? [{ name: 'Team Management', path: '/team-management', icon: Users }]
-    : [];
 
   const superAdminNavItems = user?.role === GLOBAL_ROLES.SUPER_ADMIN
     ? [{ name: 'Super Admin', path: '/super-admin-dashboard', icon: ShieldCheck }]
     : [];
 
-  const navItems = [...baseNavItems, ...adminNavItems, ...superAdminNavItems];
+  const navItems = [...baseNavItems, ...superAdminNavItems];
 
   return (
     <div className="h-screen flex overflow-hidden bg-muted/30">

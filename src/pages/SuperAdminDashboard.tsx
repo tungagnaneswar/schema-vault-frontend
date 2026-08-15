@@ -3,6 +3,7 @@ import { Users, Activity, CheckCircle, XCircle, ChevronLeft, ChevronRight, Chevr
 import { adminApi, type UserResponse, type AuditLogResponse } from '../api/adminApi';
 import PageHeader from '../components/PageHeader';
 import { SuperAdminTableSkeleton } from '../components/Skeletons';
+import { toast } from 'sonner';
 
 export default function SuperAdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'logs'>('users');
@@ -28,8 +29,8 @@ export default function SuperAdminDashboard() {
       setUsers(res.data.content);
       setUsersTotalPages(res.data.totalPages);
       setUsersTotalElements(res.data.totalElements);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast.error('Failed to fetch users list');
     } finally {
       setIsLoading(false);
     }
@@ -42,8 +43,8 @@ export default function SuperAdminDashboard() {
       setLogs(res.data.content);
       setLogsTotalPages(res.data.totalPages);
       setLogsTotalElements(res.data.totalElements);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast.error('Failed to fetch system logs');
     } finally {
       setIsLoading(false);
     }
@@ -61,8 +62,8 @@ export default function SuperAdminDashboard() {
     try {
       await adminApi.toggleUserActive(id);
       fetchUsers(usersPage, usersSize);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast.error('Failed to toggle user active status');
     }
   };
 
