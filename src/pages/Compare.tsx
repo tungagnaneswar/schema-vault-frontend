@@ -475,7 +475,7 @@ export default function Compare() {
   const [reason, setReason] = useState('');
   const [tagsInput, setTagsInput] = useState('');
   const [expandedTables, setExpandedTables] = useState<string[]>([]);
-  const [showDiffOnly, setShowDiffOnly] = useState(false);
+  const [showDiffOnly, setShowDiffOnly] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('tables');
   const [dismissMobileWarning, setDismissMobileWarning] = useState(() => localStorage.getItem('hideCompareMobileWarning') === 'true');
 
@@ -1236,6 +1236,9 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
         const subDiffCount = [
           ...tableDiff.columnDiffs,
           ...(tableDiff.foreignKeyDiffs ?? []),
+          ...(tableDiff.constraintDiffs ?? []),
+          ...(tableDiff.indexDiffs ?? []),
+          ...(tableDiff.triggerDiffs ?? []),
         ].filter(d => d.status !== 'IDENTICAL').length
           + (tableDiff.primaryKeyDiff && tableDiff.primaryKeyDiff.status !== 'IDENTICAL' ? 1 : 0);
 
@@ -1559,9 +1562,14 @@ function TablesView({ tableDiffs, expandedTables, toggleTable, showDiffOnly, sou
                   {/* Foreign Keys section */}
                   <SubSection title="Foreign Keys" icon={Link2} diffs={tableDiff.foreignKeyDiffs ?? []} />
 
-                  <div className="px-5 py-3 text-xs text-muted-foreground border-t bg-muted/10 text-center">
-                    Indexes, Triggers, and Constraints are now available in their respective tabs at the top.
-                  </div>
+                  {/* Constraints section */}
+                  <SubSection title="Constraints" icon={ShieldAlert} diffs={tableDiff.constraintDiffs ?? []} />
+
+                  {/* Indexes section */}
+                  <SubSection title="Indexes" icon={ListTree} diffs={tableDiff.indexDiffs ?? []} />
+
+                  {/* Triggers section */}
+                  <SubSection title="Triggers" icon={Zap} diffs={tableDiff.triggerDiffs ?? []} />
                 </motion.div>
               )}
             </AnimatePresence>

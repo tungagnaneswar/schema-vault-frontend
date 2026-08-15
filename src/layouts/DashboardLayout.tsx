@@ -4,19 +4,21 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { authApi } from '../api/authApi';
 import { type RootState } from '../store/store';
-import { LayoutDashboard, LogOut, ShieldCheck, Sun, Moon, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User } from 'lucide-react';
+import { LayoutDashboard, LogOut, ShieldCheck, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User } from 'lucide-react';
 import clsx from 'clsx';
 import { Toaster } from 'sonner';
 import { GLOBAL_ROLES } from '../constants/roles';
+import { useTheme } from '../context/ThemeContext';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 export default function DashboardLayout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const user = useSelector((state: RootState) => state.auth.user);
+  const { effectiveTheme } = useTheme();
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => localStorage.getItem('sidebarCollapsed') === 'true'
   );
@@ -31,19 +33,6 @@ export default function DashboardLayout() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const toggleTheme = () => {
-    const root = document.documentElement;
-    if (root.classList.contains('dark')) {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-      setIsDark(false);
-    } else {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-      setIsDark(true);
-    }
-  };
 
   const handleLogout = () => {
     authApi.logout().catch(() => {}).finally(() => {
@@ -167,13 +156,7 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            >
-              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
+            <ThemeToggle />
 
             <div className="relative" ref={dropdownRef}>
               <button 
@@ -223,7 +206,7 @@ export default function DashboardLayout() {
           <Outlet />
         </div>
       </main>
-      <Toaster position="top-right" richColors />
+      <Toaster position="top-right" richColors theme={effectiveTheme} />
     </div>
   );
 }
