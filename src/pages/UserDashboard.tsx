@@ -32,7 +32,7 @@ export default function UserDashboard() {
     <div className="space-y-6">
       <PageHeader>
         <div className="w-full">
-          <h2 className="text-xl font-bold tracking-tight">Admin Dashboard</h2>
+          <h2 className="text-xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-xs text-muted-foreground hidden lg:block">Overview of your database environments and comparison history.</p>
         </div>
       </PageHeader>
