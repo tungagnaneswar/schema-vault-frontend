@@ -41,17 +41,18 @@ export default function DashboardLayout() {
     });
   };
 
-  const baseNavItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Projects', path: '/projects', icon: Folder },
-    { name: 'Team Management', path: '/team-management', icon: Users },
-  ];
+  const isSuperAdmin = user?.role === GLOBAL_ROLES.SUPER_ADMIN;
 
-  const superAdminNavItems = user?.role === GLOBAL_ROLES.SUPER_ADMIN
-    ? [{ name: 'Super Admin', path: '/super-admin-dashboard', icon: ShieldCheck }]
-    : [];
-
-  const navItems = [...baseNavItems, ...superAdminNavItems];
+  const navItems = isSuperAdmin
+    ? [
+        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { name: 'Super Admin', path: '/super-admin-dashboard', icon: ShieldCheck },
+      ]
+    : [
+        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+        { name: 'Projects', path: '/projects', icon: Folder },
+        { name: 'Team Management', path: '/team-management', icon: Users },
+      ];
 
   return (
     <div className="h-screen flex overflow-hidden bg-muted/30">

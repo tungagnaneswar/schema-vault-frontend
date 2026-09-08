@@ -33,6 +33,7 @@ import Profile from './pages/Profile';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Security from './pages/Security';
+import Landing from './pages/Landing';
 
 function App() {
   const dispatch = useDispatch();
@@ -71,8 +72,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
-          {/* <Route path="/" element={<Landing />} /> */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/security" element={<Security />} />
@@ -90,13 +90,17 @@ function App() {
           <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<UserDashboard />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/:projectId/connections" element={<Connections />} />
-            <Route path="/projects/:projectId/compare" element={<Compare />} />
-            <Route path="/projects/:projectId/compare/:jobId" element={<Compare />} />
-            <Route path="/projects/:projectId/compare-history" element={<CompareHistory />} />
-            <Route path="/connections" element={<Navigate to="/projects" replace />} />
-            <Route path="/compare" element={<Navigate to="/projects" replace />} />
+            {/* User-only Routes (Super Admin has no access to Projects & Teams) */}
+            <Route element={<ProtectedRoute allowedRoles={[GLOBAL_ROLES.USER]} />}>
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:projectId/connections" element={<Connections />} />
+              <Route path="/projects/:projectId/compare" element={<Compare />} />
+              <Route path="/projects/:projectId/compare/:jobId" element={<Compare />} />
+              <Route path="/projects/:projectId/compare-history" element={<CompareHistory />} />
+              <Route path="/connections" element={<Navigate to="/projects" replace />} />
+              <Route path="/compare" element={<Navigate to="/projects" replace />} />
+              <Route path="/team-management" element={<TeamManagement />} />
+            </Route>
 
             {/* Super Admin Dashboard Route */}
             <Route
@@ -107,9 +111,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* Team Management Route */}
-            <Route path="/team-management" element={<TeamManagement />} />
           </Route>
 
           {/* Catch-all Fallback */}

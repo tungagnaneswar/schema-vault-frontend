@@ -300,32 +300,12 @@ export default function Connections() {
         })()}
 
           {/* Add Connection */}
-          {(() => {
-            const hasMaxConnections = (filteredConnections?.length ?? 0) >= 2;
-            return (
-              <div
-                className="relative group"
-                title={hasMaxConnections ? 'Maximum of 2 connections allowed' : undefined}
-              >
-                <button
-                  onClick={openCreate}
-                  disabled={hasMaxConnections}
-                  className={`px-4 py-2 rounded-md font-medium flex items-center gap-2 transition-colors ${
-                    hasMaxConnections
-                      ? 'bg-muted text-muted-foreground opacity-60 cursor-not-allowed'
-                      : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                  }`}
-                >
-                  <Plus className="w-4 h-4" /> Add Connection
-                </button>
-                {hasMaxConnections && (
-                  <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs px-3 py-1.5 text-xs rounded-md bg-popover border shadow-md text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity z-50">
-                    Maximum of 2 connections allowed
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          <button
+            onClick={openCreate}
+            className="px-4 py-2 rounded-md font-medium flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Add Connection
+          </button>
         </div>
       </div>
 
@@ -430,7 +410,7 @@ export default function Connections() {
           ))}
           {filteredConnections?.length === 0 && (
             <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed rounded-xl">
-              No connections yet. Add two database connections to enable schema comparison.
+              No connections yet. Add database connections to enable schema comparison.
             </div>
           )}
         </div>
