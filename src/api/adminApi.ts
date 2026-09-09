@@ -31,11 +31,11 @@ export interface PageResponse<T> {
 
 export const adminApi = {
   getUsers: (page = 0, size = 10): Promise<{ data: PageResponse<UserResponse> }> =>
-    api.get('/admin/users', { params: { page, size } }),
+    api.get('/superadmin/users', { params: { page, size } }),
 
   toggleUserActive: (id: number): Promise<{ data: UserResponse }> =>
-    api.patch(`/admin/users/${id}/toggle-active`),
+    api.patch(`/superadmin/users/${id}/toggle-active`),
 
   getLogs: (page = 0, size = 20): Promise<{ data: PageResponse<AuditLogResponse> }> =>
-    api.get('/admin/logs', { params: { page, size } }),
+    api.get('/superadmin/logs', { params: { page, size } }),
 };
