@@ -5,7 +5,7 @@ import { fileURLToPath, URL } from 'node:url'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const proxyTarget = env.VITE_API_BASE_URL;
+  const backendHost = env.VITE_BACKEND_HOST;
 
   return {
     plugins: [react()],
@@ -16,8 +16,8 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       proxy: {
-        '/api': {
-          target: proxyTarget,
+        '/api/v1': {
+          target: backendHost,
           changeOrigin: true,
         },
       },
