@@ -16,6 +16,8 @@ export default function Register() {
   const [email, setEmail] = useState<string>(() => {
     return location.state?.email || sessionStorage.getItem('reg_email') || '';
   });
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
   const [password, setPassword] = useState<string>(location.state?.password || '');
   const [confirmPassword, setConfirmPassword] = useState<string>(location.state?.password || '');
   const [otp, setOtp] = useState<string>('');
@@ -46,7 +48,7 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: async () => {
-      const response = await api.post('/auth/register', { email, password });
+      const response = await api.post('/auth/register', { email, password, firstName, lastName });
       return response.data;
     },
     onSuccess: (data) => {
@@ -83,7 +85,7 @@ export default function Register() {
       sessionStorage.removeItem('reg_email');
       sessionStorage.removeItem('reg_step');
       dispatch(setCredentials({
-        user: { email: data.email, role: data.role },
+        user: { email: data.email, role: data.role, firstName: data.firstName, lastName: data.lastName },
         accessToken: data.accessToken,
       }));
       navigate('/dashboard');
@@ -99,6 +101,11 @@ export default function Register() {
     setInfoMessage('');
     
     if (step === 1) {
+      if (!firstName.trim() || !lastName.trim()) {
+        setError('First name and last name are required.');
+        return;
+      }
+
       if (password !== confirmPassword) {
         setError('Passwords do not match.');
         return;
@@ -156,6 +163,33 @@ export default function Register() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {step === 1 ? (
           <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">First Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={firstName}
+                  maxLength={75}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  placeholder="John"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Last Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={lastName}
+                  maxLength={75}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                  placeholder="Doe"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Email <span className="text-red-500">*</span></label>
               <div className="relative">

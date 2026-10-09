@@ -27,11 +27,13 @@ export default function Profile() {
       >
         <div className="p-8 border-b bg-muted/20 flex flex-col items-center sm:flex-row sm:items-start gap-6">
           <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center text-primary text-4xl font-bold shadow-inner">
-            {user?.email?.charAt(0).toUpperCase() || 'U'}
+            {(user?.firstName?.[0] || user?.email?.[0] || 'U').toUpperCase()}
           </div>
           <div className="flex-1 text-center sm:text-left mt-2 sm:mt-0">
             <h3 className="text-2xl font-bold text-foreground mb-1">
-              {user?.email ? user.email.split('@')[0] : 'User'}
+              {(user?.firstName || user?.lastName)
+                ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+                : (user?.email ? user.email.split('@')[0] : 'User')}
             </h3>
             <div className="flex flex-col sm:flex-row items-center gap-3 text-sm text-muted-foreground mt-3">
               <span className="flex items-center gap-1.5 bg-background px-3 py-1 rounded-full border shadow-sm">
@@ -53,6 +55,14 @@ export default function Profile() {
               Account Details
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-muted/30 p-4 rounded-lg border">
+                <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">First Name</p>
+                <p className="font-medium">{user?.firstName || '—'}</p>
+              </div>
+              <div className="bg-muted/30 p-4 rounded-lg border">
+                <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Last Name</p>
+                <p className="font-medium">{user?.lastName || '—'}</p>
+              </div>
               <div className="bg-muted/30 p-4 rounded-lg border">
                 <p className="text-xs text-muted-foreground uppercase font-semibold mb-1">Email Address</p>
                 <p className="font-medium">{user?.email}</p>

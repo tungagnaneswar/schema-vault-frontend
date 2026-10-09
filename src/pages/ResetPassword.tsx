@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Loader2, Eye, EyeOff, CheckCircle2, ArrowLeft, ShieldCheck } from 'lucide-react';
@@ -33,8 +33,9 @@ function getStrength(password: string): PasswordStrength {
 
 export default function ResetPassword() {
   const navigate = useNavigate();
-  const email = sessionStorage.getItem('otp_email') ?? '';
-  const otpCode = sessionStorage.getItem('otp_code') ?? '';
+  const location = useLocation();
+  const email = location.state?.email || sessionStorage.getItem('otp_email') || '';
+  const resetToken = location.state?.resetToken || sessionStorage.getItem('otp_code') || '';
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,15 +46,15 @@ export default function ResetPassword() {
 
   const strength = getStrength(newPassword);
 
-  // Guard: if no email or OTP code, redirect back
+  // Guard: if no email or resetToken, redirect back
   useEffect(() => {
-    if (!email || !otpCode) {
+    if (!email || !resetToken) {
       navigate('/auth/forgot-password', { replace: true });
     }
-  }, [email, otpCode, navigate]);
+  }, [email, resetToken, navigate]);
 
   const mutation = useMutation({
-    mutationFn: () => authApi.resetPassword(email, otpCode, newPassword),
+    mutationFn: () => authApi.resetPassword(email, resetToken, newPassword),
     onSuccess: () => {
       // Clean up session storage
       sessionStorage.removeItem('otp_code');

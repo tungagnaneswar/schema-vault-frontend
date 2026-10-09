@@ -23,7 +23,7 @@ export default function Login() {
     },
     onSuccess: (data) => {
       dispatch(setCredentials({
-        user: { email: data.email, role: data.role },
+        user: { email: data.email, role: data.role, firstName: data.firstName, lastName: data.lastName },
         accessToken: data.accessToken,
       }));
       navigate('/dashboard');

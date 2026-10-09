@@ -25,9 +25,10 @@ export default function VerifyOtp() {
 
   const mutation = useMutation({
     mutationFn: () => authApi.verifyOtp(email, otp),
-    onSuccess: () => {
-      sessionStorage.setItem('otp_code', otp);
-      navigate('/auth/reset-password');
+    onSuccess: (data) => {
+      sessionStorage.removeItem('otp_code');
+      const resetToken = data?.resetToken || otp;
+      navigate('/auth/reset-password', { state: { resetToken, email } });
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || 'Invalid or expired OTP. Please try again.';

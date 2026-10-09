@@ -74,10 +74,10 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post(`${BASE_URL}/auth/refresh`, {}, { withCredentials: true });
-        const { accessToken, email, role } = response.data || {};
+        const { accessToken, email, role, firstName, lastName } = response.data || {};
 
         if (accessToken) {
-          store.dispatch(setCredentials({ user: { email, role }, accessToken }));
+          store.dispatch(setCredentials({ user: { email, role, firstName, lastName }, accessToken }));
           processQueue(null, accessToken);
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;

@@ -44,9 +44,9 @@ function App() {
     const initAuth = async () => {
       try {
         const response = await api.post('/auth/refresh');
-        const { accessToken, email, role } = response.data || {};
+        const { accessToken, email, role, firstName, lastName } = response.data || {};
         if (isMounted && accessToken) {
-          dispatch(setCredentials({ user: { email, role }, accessToken }));
+          dispatch(setCredentials({ user: { email, role, firstName, lastName }, accessToken }));
         } else if (isMounted) {
           dispatch(finishInitializing());
         }

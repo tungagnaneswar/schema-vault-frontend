@@ -162,10 +162,14 @@ export default function DashboardLayout() {
                 className="flex items-center gap-3 hover:bg-muted/50 p-1.5 pr-3 rounded-full transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+                  {(user?.firstName?.[0] || user?.email?.[0] || 'U').toUpperCase()}
                 </div>
                 <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium leading-none mb-1">{user?.email}</p>
+                  <p className="text-sm font-medium leading-none mb-1">
+                    {(user?.firstName || user?.lastName)
+                      ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+                      : user?.email}
+                  </p>
                   <p className="text-xs text-muted-foreground leading-none">{user?.role}</p>
                 </div>
                 <ChevronDown className={clsx("w-4 h-4 text-muted-foreground transition-transform", isDropdownOpen && "rotate-180")} />
@@ -174,7 +178,11 @@ export default function DashboardLayout() {
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-background rounded-md shadow-md border py-1 z-20">
                   <div className="px-4 py-2 border-b sm:hidden">
-                    <p className="text-sm font-medium truncate">{user?.email}</p>
+                    <p className="text-sm font-medium truncate">
+                      {(user?.firstName || user?.lastName)
+                        ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim()
+                        : user?.email}
+                    </p>
                     <p className="text-xs text-muted-foreground truncate">{user?.role}</p>
                   </div>
                   

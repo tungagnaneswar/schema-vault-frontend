@@ -6,6 +6,7 @@ export interface ForgotPasswordResponse {
 
 export interface VerifyOtpResponse {
   message: string;
+  resetToken?: string;
 }
 
 export interface ResetPasswordResponse {
