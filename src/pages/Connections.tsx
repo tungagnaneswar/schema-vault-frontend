@@ -76,7 +76,7 @@ export default function Connections() {
   const { data: connections, isLoading } = useQuery<DbConnection[]>({
     queryKey: ['connections'],
     queryFn: async () => {
-      const res = await api.get('/connections');
+      const res = await api.get('/connections?size=1000');
       return res.data.content ? res.data.content : res.data;
     }
   });

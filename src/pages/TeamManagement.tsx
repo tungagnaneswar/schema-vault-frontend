@@ -66,7 +66,7 @@ export default function TeamManagement() {
 
   const fetchDropdownData = async () => {
     const [connectionsResult, usersResult] = await Promise.allSettled([
-      api.get('/connections'),
+      api.get('/connections?size=1000'),
       teamsApi.getAvailableUsers(),
     ]);
 
@@ -79,7 +79,7 @@ export default function TeamManagement() {
     if (usersResult.status === 'fulfilled') {
       setAvailableUsers(Array.isArray(usersResult.value) ? usersResult.value : []);
     } else {
-      setError('Failed to load available users. Please refresh the page and try again.');
+      setAvailableUsers([]);
     }
   };
 

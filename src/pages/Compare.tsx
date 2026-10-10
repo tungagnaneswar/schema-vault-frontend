@@ -487,7 +487,7 @@ export default function Compare() {
   const { data: allConnections, isLoading: isLoadingConn } = useQuery<Connection[]>({
     queryKey: ['connections'],
     queryFn: async () => {
-      const res = await api.get('/connections');
+      const res = await api.get('/connections?size=1000');
       return res.data.content ? res.data.content : res.data;
     }
   });

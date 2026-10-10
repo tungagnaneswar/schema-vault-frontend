@@ -53,10 +53,14 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     if (activeTab === 'users') {
       fetchUsers(usersPage, usersSize);
-    } else {
+    }
+  }, [activeTab, usersPage, usersSize]);
+
+  useEffect(() => {
+    if (activeTab === 'logs') {
       fetchLogs(logsPage, logsSize);
     }
-  }, [activeTab, usersPage, usersSize, logsPage, logsSize]);
+  }, [activeTab, logsPage, logsSize]);
 
   const toggleUserStatus = async (id: number) => {
     try {

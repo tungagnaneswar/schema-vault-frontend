@@ -45,7 +45,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Do not attempt token refresh for public authentication endpoints
+    // Do not attempt token refresh for public authentication endpoints or logout
     const isAuthEndpoint = originalRequest?.url?.includes('/auth/login') ||
                            originalRequest?.url?.includes('/auth/register') ||
                            originalRequest?.url?.includes('/auth/verify-registration') ||
@@ -53,7 +53,8 @@ api.interceptors.response.use(
                            originalRequest?.url?.includes('/auth/forgot-password') ||
                            originalRequest?.url?.includes('/auth/verify-otp') ||
                            originalRequest?.url?.includes('/auth/reset-password') ||
-                           originalRequest?.url?.includes('/auth/refresh');
+                           originalRequest?.url?.includes('/auth/refresh') ||
+                           originalRequest?.url?.includes('/auth/logout');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {

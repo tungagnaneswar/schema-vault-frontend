@@ -12,7 +12,7 @@ export interface Project {
 }
 
 export const getProjects = async (): Promise<Project[]> => {
-  const response = await api.get('/projects');
+  const response = await api.get('/projects?size=1000');
   // Handle both unpaginated and paginated responses for backward compatibility during transition
   if (Array.isArray(response.data)) return response.data;
   if (response.data?.content && Array.isArray(response.data.content)) return response.data.content;
