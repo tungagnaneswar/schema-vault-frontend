@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
 import { authApi } from '../api/authApi';
 import { setCredentials } from '../store/authSlice';
+import { clearQueryCache } from '../lib/queryClient';
 import { Mail, Lock, Loader2, UserPlus, Eye, EyeOff, RotateCcw } from 'lucide-react';
 
 export default function Register() {
@@ -28,7 +29,6 @@ export default function Register() {
   const [cooldown, setCooldown] = useState<number>(0);
 
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (email) {
@@ -84,11 +84,12 @@ export default function Register() {
     onSuccess: (data) => {
       sessionStorage.removeItem('reg_email');
       sessionStorage.removeItem('reg_step');
+      clearQueryCache();
       dispatch(setCredentials({
         user: { email: data.email, role: data.role, firstName: data.firstName, lastName: data.lastName },
         accessToken: data.accessToken,
       }));
-      navigate('/dashboard');
+      window.location.replace('/dashboard');
     },
     onError: (err: any) => {
       setError(err.response?.data?.message || err.response?.data?.error || 'Verification failed. Please check the OTP and try again.');

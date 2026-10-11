@@ -21,14 +21,15 @@ export default function Projects() {
   const [formData, setFormData] = useState({ name: '', description: '', createDefaultEnvironments: true });
 
   const { data: projects, isLoading } = useQuery<Project[]>({
-    queryKey: ['projects'],
-    queryFn: getProjects
+    queryKey: ['projects', user?.email],
+    queryFn: getProjects,
+    enabled: !!user?.email,
   });
 
   const createMutation = useMutation({
     mutationFn: createProject,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', user?.email] });
       closeModal();
       toast.success('Project created successfully');
     },
@@ -40,7 +41,7 @@ export default function Projects() {
   const deleteMutation = useMutation({
     mutationFn: deleteProject,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', user?.email] });
       setProjectToDelete(null);
       toast.success('Project deleted successfully');
     },

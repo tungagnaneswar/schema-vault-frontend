@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
 import api from '../api/axios';
 import { motion } from 'framer-motion';
 import { Plus, Database, Trash2, ShieldCheck, Loader2, Pencil, X, Folder, ArrowLeft, GitCompare, Clock, CheckCircle2, AlertCircle, User as UserIcon, Timer, Tag, Layers, Sparkles } from 'lucide-react';
@@ -56,6 +58,7 @@ const ENGINE_PORTS: Record<string, number> = {
 
 export default function Connections() {
   const queryClient = useQueryClient();
+  const { user } = useSelector((state: RootState) => state.auth);
   const { projectId: projectIdParam } = useParams();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,22 +77,24 @@ export default function Connections() {
   const projectIdNum = parseInt(projectIdParam);
 
   const { data: connections, isLoading } = useQuery<DbConnection[]>({
-    queryKey: ['connections'],
+    queryKey: ['connections', user?.email],
     queryFn: async () => {
       const res = await api.get('/connections?size=1000');
       return res.data.content ? res.data.content : res.data;
-    }
+    },
+    enabled: !!user?.email,
   });
 
   const { data: projects } = useQuery<Project[]>({
-    queryKey: ['projects'],
-    queryFn: getProjects
+    queryKey: ['projects', user?.email],
+    queryFn: getProjects,
+    enabled: !!user?.email,
   });
 
   const { data: environments } = useQuery<Environment[]>({
-    queryKey: ['environments', projectIdParam],
+    queryKey: ['environments', projectIdParam, user?.email],
     queryFn: () => getEnvironmentsByProject(projectIdNum),
-    enabled: !!projectIdParam
+    enabled: !!projectIdParam && !!user?.email,
   });
 
   const createEnvMutation = useMutation({
@@ -98,7 +103,7 @@ export default function Connections() {
       return await createEnvironment({ name, projectId: projectIdNum, sequence: seq });
     },
     onSuccess: (createdEnv) => {
-      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam] });
+      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam, user?.email] });
       setNewEnvName('');
       toast.success(`Environment '${createdEnv.name}' created`);
       if (formData.environmentId === 0) {
@@ -115,7 +120,7 @@ export default function Connections() {
       await deleteEnvironment(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam] });
+      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam, user?.email] });
       toast.success('Environment deleted');
     },
     onError: (error: any) => {
@@ -131,7 +136,7 @@ export default function Connections() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam] });
+      queryClient.invalidateQueries({ queryKey: ['environments', projectIdParam, user?.email] });
       toast.success('Default environments created successfully');
     },
     onError: (error: any) => {
@@ -140,9 +145,9 @@ export default function Connections() {
   });
 
   const { data: jobsData, isLoading: isLoadingJobs } = useQuery({
-    queryKey: ['compareJobs', projectIdParam, historyPage],
+    queryKey: ['compareJobs', projectIdParam, historyPage, user?.email],
     queryFn: () => getCompareJobs(Number(projectIdParam), historyPage, 10),
-    enabled: !!projectIdParam
+    enabled: !!projectIdParam && !!user?.email,
   });
 
   const formatDuration = (ms: number | null) => {
@@ -161,7 +166,7 @@ export default function Connections() {
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['connections', user?.email] });
       closeModal();
       toast.success('Connection added successfully');
     },
@@ -176,7 +181,7 @@ export default function Connections() {
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['connections', user?.email] });
       closeModal();
       toast.success('Connection updated successfully');
     },
@@ -190,7 +195,7 @@ export default function Connections() {
       await api.delete(`/connections/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['connections', user?.email] });
       setConnToDelete(null);
       toast.success('Connection deleted successfully');
     },

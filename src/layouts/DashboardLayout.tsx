@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
+import { clearQueryCache } from '../lib/queryClient';
 import { authApi } from '../api/authApi';
 import { type RootState } from '../store/store';
 import { LayoutDashboard, LogOut, ShieldCheck, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User } from 'lucide-react';
@@ -13,7 +14,6 @@ import { ThemeToggle } from '../components/ThemeToggle';
 
 export default function DashboardLayout() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
   const user = useSelector((state: RootState) => state.auth.user);
   const { effectiveTheme } = useTheme();
@@ -36,8 +36,10 @@ export default function DashboardLayout() {
 
   const handleLogout = () => {
     authApi.logout().catch(() => {}).finally(() => {
+      clearQueryCache();
+      sessionStorage.clear();
       dispatch(logout());
-      navigate('/login');
+      window.location.replace('/login');
     });
   };
 

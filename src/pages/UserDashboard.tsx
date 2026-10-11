@@ -11,8 +11,9 @@ import { GLOBAL_ROLES } from '../constants/roles';
 export default function UserDashboard() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { data, isLoading } = useQuery({
-    queryKey: ['dashboardStats'],
+    queryKey: ['dashboardStats', user?.email],
     queryFn: getDashboardStats,
+    enabled: !!user?.email,
   });
 
   const isSuperAdmin = user?.role === GLOBAL_ROLES.SUPER_ADMIN;

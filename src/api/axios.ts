@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { store } from '../store/store';
 import { setCredentials, logout } from '../store/authSlice';
+import { clearQueryCache } from '../lib/queryClient';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -92,12 +93,14 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         isRefreshing = false;
 
+        clearQueryCache();
+        sessionStorage.clear();
         store.dispatch(logout());
         const publicPaths = ['/', '/login', '/register', '/privacy', '/terms', '/security'];
         const currentPath = window.location.pathname;
         const isPublicPath = publicPaths.includes(currentPath) || currentPath.startsWith('/auth/');
         if (!isPublicPath) {
-          window.location.href = '/login';
+          window.location.replace('/login');
         }
         return Promise.reject(refreshError);
       }

@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
 import api from '../api/axios';
 import { createSnapshot, startCompareJob, getCompareJob, parseTags, type CompareJob as CompareJobType } from '../api/compareApi';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -484,17 +486,21 @@ export default function Compare() {
     return <Navigate to="/projects" replace />;
   }
 
+  const { user } = useSelector((state: RootState) => state.auth);
+
   const { data: allConnections, isLoading: isLoadingConn } = useQuery<Connection[]>({
-    queryKey: ['connections'],
+    queryKey: ['connections', user?.email],
     queryFn: async () => {
       const res = await api.get('/connections?size=1000');
       return res.data.content ? res.data.content : res.data;
-    }
+    },
+    enabled: !!user?.email,
   });
 
   const { data: projects } = useQuery<Project[]>({
-    queryKey: ['projects'],
-    queryFn: getProjects
+    queryKey: ['projects', user?.email],
+    queryFn: getProjects,
+    enabled: !!user?.email,
   });
 
   const currentProject = projects?.find(p => p.id === parseInt(projectIdParam));
@@ -517,9 +523,9 @@ export default function Compare() {
   const stepDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const { data: jobData } = useQuery<CompareJobType>({
-    queryKey: ['compareJob', pollingJobId],
+    queryKey: ['compareJob', pollingJobId, user?.email],
     queryFn: () => getCompareJob(pollingJobId!),
-    enabled: !!pollingJobId,
+    enabled: !!pollingJobId && !!user?.email,
     refetchInterval: (query) => {
         const state = query.state.data;
         if (state && (state.status === 'COMPLETED' || state.status === 'FAILED')) {

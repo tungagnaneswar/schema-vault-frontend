@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
 import { getCompareJobs, parseTags } from '../api/compareApi';
 import PageHeader from '../components/PageHeader';
 import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Loader2, User as UserIcon, Timer, Tag } from 'lucide-react';
@@ -10,17 +12,19 @@ import clsx from 'clsx';
 export default function CompareHistory() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
   const [page, setPage] = useState(0);
 
   const { data: jobsData, isLoading } = useQuery({
-    queryKey: ['compareJobs', projectId, page],
+    queryKey: ['compareJobs', projectId, page, user?.email],
     queryFn: () => getCompareJobs(Number(projectId), page, 10),
-    enabled: !!projectId
+    enabled: !!projectId && !!user?.email,
   });
 
   const { data: projects } = useQuery({
-    queryKey: ['projects'],
-    queryFn: getProjects
+    queryKey: ['projects', user?.email],
+    queryFn: getProjects,
+    enabled: !!user?.email,
   });
 
   const currentProject = projects?.find(p => p.id === Number(projectId));

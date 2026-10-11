@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
 import { setCredentials } from '../store/authSlice';
+import { clearQueryCache } from '../lib/queryClient';
 import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
@@ -22,11 +23,12 @@ export default function Login() {
       return response.data;
     },
     onSuccess: (data) => {
+      clearQueryCache();
       dispatch(setCredentials({
         user: { email: data.email, role: data.role, firstName: data.firstName, lastName: data.lastName },
         accessToken: data.accessToken,
       }));
-      navigate('/dashboard');
+      window.location.replace('/dashboard');
     },
     onError: (err: any) => {
       const errorCode = err.response?.data?.error;
