@@ -5,7 +5,7 @@ import { logout } from '../store/authSlice';
 import { clearQueryCache } from '../lib/queryClient';
 import { authApi } from '../api/authApi';
 import { type RootState } from '../store/store';
-import { LayoutDashboard, LogOut, ShieldCheck, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User } from 'lucide-react';
+import { LayoutDashboard, LogOut, ShieldCheck, ChevronDown, Users, Folder, PanelLeftClose, PanelLeftOpen, User, ScrollText } from 'lucide-react';
 import clsx from 'clsx';
 import { Toaster } from 'sonner';
 import { GLOBAL_ROLES } from '../constants/roles';
@@ -112,6 +112,28 @@ export default function DashboardLayout() {
             );
           })}
         </nav>
+
+        {/* Changelog link */}
+        <div className="px-2 pb-1">
+          <Link
+            to="/changelog"
+            title={isSidebarCollapsed ? "Changelog" : undefined}
+            className={clsx(
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors',
+              isSidebarCollapsed ? 'justify-center' : ''
+            )}
+          >
+            <ScrollText className="w-4 h-4 shrink-0" />
+            <span
+              className={clsx(
+                'whitespace-nowrap transition-all duration-300 ease-in-out',
+                isSidebarCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+              )}
+            >
+              Changelog
+            </span>
+          </Link>
+        </div>
 
         {/* Collapse toggle at the bottom */}
         <div className="border-t p-2">

@@ -15,6 +15,7 @@ import GuestRoute from './components/GuestRoute';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from './components/ErrorFallback';
 import SessionLoader from './components/SessionLoader';
+import ScrollToTop from './components/ScrollToTop';
 
 // Pages
 import Login from './pages/Login';
@@ -33,6 +34,7 @@ import Profile from './pages/Profile';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Security from './pages/Security';
+import Changelog from './pages/Changelog';
 import Landing from './pages/Landing';
 
 function App() {
@@ -70,12 +72,14 @@ function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/security" element={<Security />} />
+          <Route path="/changelog" element={<Changelog />} />
 
           {/* Auth Routes */}
           <Route element={<GuestRoute><AuthLayout /></GuestRoute>}>

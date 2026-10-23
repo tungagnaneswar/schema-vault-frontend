@@ -699,6 +699,7 @@ export default function Landing() {
                 <li><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
                 <li><Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
                 <li><Link to="/security" className="hover:text-foreground transition-colors">Security Architecture</Link></li>
+                <li><Link to="/changelog" className="hover:text-foreground transition-colors">Changelog</Link></li>
               </ul>
             </div>
           </div>
